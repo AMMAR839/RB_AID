@@ -18,4 +18,13 @@
     <string name="there_are_8_000_new_cases_of_retinoblastoma_every_year">There are 8,000 new cases of retinoblastoma every year</string>
     <string name="start_check_now2">Start check now</string>
     <string name="tutorial">TUTORIAL</string>
+
+    <string name="app_name">MyRetinoblastomaApp</string>
+    <string name="background_image_description">Gambar background mata bayi</string>
+    <string name="back_button_description">Tombol kembali</string>
+    <string name="main_text_content">Ada 8,000 kasus baru\nretinoblastoma\nsetiap\ntahunnya</string>
+    <string name="cta_text_content">Mulai cek sekarang</string>
+    <string name="instruction_text">Lalu tekan pada bagian ini untuk memulai deteksi</string>
+    <string name="camera_button_description">Tombol kamera</string>
+    <string name="exit_text_content">Keluar</string>
 </resources>
