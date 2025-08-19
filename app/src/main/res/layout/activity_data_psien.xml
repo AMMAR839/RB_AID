@@ -42,7 +42,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
-                    android:hint="Nama"
+                    android:hint="@string/nama"
                     android:padding="16dp"
                     android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>

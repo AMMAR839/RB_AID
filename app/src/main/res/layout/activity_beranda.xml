@@ -33,7 +33,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="80dp"
             android:lineSpacingExtra="2dp"
-            android:text="Ada 8,000\nkasus baru\nretinoblastoma\nsetiap\ntahunnya"
+            android:text="@string/there_are_8_000_new_cases_of_retinoblastoma_every_year"
             android:textColor="@android:color/white"
             android:textSize="45sp"/>
     </RelativeLayout>
@@ -51,7 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
-                android:text="Mulai Cek Sekarang"
+                android:text="@string/mulai_cek_sekarang"
                 android:textColor="@android:color/white"
                 android:textSize="30dp"
                 app:layout_constraintBottom_toTopOf="@+id/tutorialButton"/>
@@ -66,7 +66,7 @@
                 android:backgroundTint="@android:color/holo_orange_light"
                 android:paddingVertical="7dp"
                 android:paddingHorizontal="80dp"
-                android:text="TUTORIAL"
+                android:text="@string/tutorial"
                 android:textSize="25dp"
                 android:textColor="@android:color/white" />
 
@@ -97,7 +97,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
                 android:clickable="true"
-                android:text="Keluar"
+                android:text="@string/Keluar"
                 android:textColor="@android:color/holo_blue_light"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toBottomOf="parent"

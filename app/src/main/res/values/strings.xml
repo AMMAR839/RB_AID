@@ -10,12 +10,12 @@
     <string name="todo2">TODO</string>
     <string name="rb_aid2">Rb-AID\n</string>
     <string name="kata_sandi">Kata sandi</string>
-    <string name="or">or</string>
+    <string name="atau">atau</string>
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="background_collage_of_eyes">Background collage of eyes</string>
-    <string name="start_check_now">Start check now</string>
+    <string name="mulai_cek_sekarang">Mulai Cek Sekarang</string>
     <string name="todo23">TODO</string>
-    <string name="there_are_8_000_new_cases_of_retinoblastoma_every_year">There are 8,000 new cases of retinoblastoma every year</string>
+    <string name="there_are_8_000_new_cases_of_retinoblastoma_every_year">Ada 8,000\nkasus baru\nretinoblastoma\nsetiap\ntahunnya</string>
     <string name="start_check_now2">Start check now</string>
     <string name="tutorial">TUTORIAL</string>
     <string name="background_image_description">Gambar background mata bayi</string>
@@ -24,5 +24,5 @@
     <string name="cta_text_content">Mulai cek sekarang</string>
     <string name="instruction_text">Lalu tekan pada bagian ini untuk memulai deteksi</string>
     <string name="camera_button_description">Tombol kamera</string>
-    <string name="exit_text_content">Keluar</string>
+    <string name="Keluar">Keluar</string>
 </resources>
