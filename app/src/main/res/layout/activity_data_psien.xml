@@ -41,8 +41,6 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/edit_text_background"
-                    android:drawableStart="@drawable/ic_user"
                     android:drawablePadding="8dp"
                     android:hint="Nama"
                     android:padding="16dp"
@@ -59,8 +57,6 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/edit_text_background"
-                    android:drawableStart="@drawable/ic_id_card"
                     android:drawablePadding="8dp"
                     android:hint="NIK"
                     android:padding="16dp"
@@ -77,8 +73,6 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/edit_text_background"
-                    android:drawableStart="@drawable/ic_calendar"
                     android:drawablePadding="8dp"
                     android:hint="DD/MM/YY"
                     android:padding="16dp"
@@ -136,7 +130,6 @@
         android:padding="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_back"
         app:tint="@android:color/white" />
 
     <TextView

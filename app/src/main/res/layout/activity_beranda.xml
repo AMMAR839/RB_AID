@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    tools:context=".BerandaActivity">
+
+    <!-- Background Image (assuming it's one image) -->
+    <ImageView
+        android:id="@+id/backgroundImageView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/todo23"
+        android:scaleType="centerCrop"
+        android:src="@drawable/beranda"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="top">
+
+        <TextView
+            android:layout_gravity="top"
+            android:id="@+id/infoTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="80dp"
+            android:lineSpacingExtra="2dp"
+            android:text="Ada 8,000\nkasus baru\nretinoblastoma\nsetiap\ntahunnya"
+            android:textColor="@android:color/white"
+            android:textSize="45sp"/>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="vertical">
+
+
+            <TextView
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/startCheckTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="Mulai Cek Sekarang"
+                android:textColor="@android:color/white"
+                android:textSize="30dp"
+                app:layout_constraintBottom_toTopOf="@+id/tutorialButton"/>
+
+
+            <Button
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/tutorialButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:backgroundTint="@android:color/holo_orange_light"
+                android:paddingVertical="7dp"
+                android:paddingHorizontal="80dp"
+                android:text="TUTORIAL"
+                android:textSize="25dp"
+                android:textColor="@android:color/white" />
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/cameraButton"
+                android:layout_width="275dp"
+                android:layout_height="55dp"
+                android:layout_marginBottom="10dp"
+                android:textColor="@android:color/black"
+                android:backgroundTint="@color/transparent"
+                app:strokeWidth="2sp"
+                app:strokeColor="@color/white"
+                app:icon="@drawable/camera"
+                app:iconSize="40dp"
+                app:iconPadding="0dp"
+                app:iconGravity="textStart"
+                app:layout_constraintBottom_toTopOf="@+id/signOutTextView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tutorialButton"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <TextView
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/signOutTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                android:clickable="true"
+                android:text="Keluar"
+                android:textColor="@android:color/holo_blue_light"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cameraButton" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

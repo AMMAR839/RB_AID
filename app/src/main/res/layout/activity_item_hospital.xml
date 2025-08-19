@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -26,9 +27,8 @@
                 android:id="@+id/icon_location"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
-                android:src="@drawable/ic_location_pin"
-                android:tint="@android:color/white"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                app:tint="@android:color/white" />
 
             <TextView
                 android:id="@+id/textView_hospital_name"
@@ -54,10 +54,9 @@
         android:id="@+id/button_send_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_send_arrow"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:tint="@android:color/white"
         android:padding="8dp"
-        android:contentDescription="Send email" />
+        android:contentDescription="Send email"
+        app:tint="@android:color/white" />
 
 </LinearLayout>

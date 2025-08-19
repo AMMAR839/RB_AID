@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".LoginActivity">
 
     <ImageView
         android:id="@+id/backgroundImageView"
@@ -45,7 +45,7 @@
 
 
     <Button
-        android:id="@+id/googleSignInButton"
+        android:id="@+id/btn_googleSignIn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -66,17 +66,17 @@
         android:id="@+id/orTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/or"
+        android:text="atau"
         android:textColor="@android:color/white"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/nameEditText"
+        app:layout_constraintBottom_toTopOf="@+id/edt_nama_Masuk"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/googleSignInButton" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_googleSignIn" />
 
     <EditText
-        android:id="@+id/nameEditText"
+        android:id="@+id/edt_nama_Masuk"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -86,13 +86,13 @@
         android:textColor="@android:color/white"
         android:background="@drawable/rounded" android:padding="12dp"
         android:drawableStart="@drawable/acun" android:drawablePadding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/passwordEditText"
+        app:layout_constraintBottom_toTopOf="@+id/edt_password_Masuk"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/orTextView" />
 
     <EditText
-        android:id="@+id/passwordEditText"
+        android:id="@+id/edt_password_Masuk"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -108,7 +108,7 @@
         app:layout_constraintBottom_toTopOf="@+id/loginButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nameEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/edt_nama_Masuk" />
 
     <Button
         android:id="@+id/loginButton"
@@ -117,30 +117,43 @@
         android:layout_marginStart="82dp"
         android:layout_marginEnd="82dp"
         android:layout_marginTop="24dp"
-        android:text="@string/login"
+        android:text="Masuk"
         android:backgroundTint="@color/white" android:textColor="@android:color/black"
-        app:layout_constraintBottom_toTopOf="@+id/signupTextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/passwordEditText"
+        app:layout_constraintTop_toBottomOf="@+id/edt_password_Masuk"
         app:cornerRadius="24dp"
         android:padding="12dp"/>
 
-    <TextView
-        android:id="@+id/signupTextView"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Don't have an account? Sign up"
-        android:textColor="@android:color/white"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/offlineModeButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/loginButton" />
+        android:gravity="center_horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/btn_offlineMode"
+        app:layout_constraintTop_toBottomOf="@+id/loginButton" >
+
+        <TextView
+            android:id="@+id/signupTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Belum punya akun? "
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/btntxt_buatAkun"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Buat Akun"
+            android:textColor="@android:color/holo_blue_light"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+    </LinearLayout>
 
     <Button
-        android:id="@+id/offlineModeButton"
+        android:id="@+id/btn_offlineMode"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="82dp"
@@ -154,7 +167,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/signupTextView"
         app:cornerRadius="24dp"
         android:padding="12dp"/>
 
