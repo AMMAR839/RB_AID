@@ -43,7 +43,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.6" />
 
-
     <Button
         android:id="@+id/btn_googleSignIn"
         android:layout_width="0dp"
@@ -70,13 +69,13 @@
         android:textColor="@android:color/white"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/edt_nama_Masuk"
+        app:layout_constraintBottom_toTopOf="@+id/edt_email_Masuk"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_googleSignIn" />
 
     <EditText
-        android:id="@+id/edt_nama_Masuk"
+        android:id="@+id/edt_email_Masuk"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
@@ -105,13 +104,26 @@
         android:background="@drawable/rounded" android:inputType="textPassword"
         android:padding="12dp"
         android:drawableStart="@drawable/lock" android:drawablePadding="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/loginButton"
+        app:layout_constraintBottom_toTopOf="@+id/btn_masuk"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edt_nama_Masuk" />
+        app:layout_constraintTop_toBottomOf="@+id/edt_email_Masuk" />
+
+    <TextView
+        android:id="@+id/btntxt_lupa_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="Lupa Password?"
+        android:textColor="@android:color/holo_blue_light"
+        app:layout_constraintBottom_toTopOf="@+id/btn_masuk"
+        app:layout_constraintTop_toBottomOf="@+id/edt_password_Masuk"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <Button
-        android:id="@+id/loginButton"
+        android:id="@+id/btn_masuk"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="82dp"
@@ -130,7 +142,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         app:layout_constraintBottom_toTopOf="@+id/btn_offlineMode"
-        app:layout_constraintTop_toBottomOf="@+id/loginButton" >
+        app:layout_constraintTop_toBottomOf="@+id/btn_masuk" >
 
         <TextView
             android:id="@+id/signupTextView"
@@ -145,6 +157,7 @@
             android:id="@+id/btntxt_buatAkun"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:clickable="true"
             android:text="Buat Akun"
             android:textColor="@android:color/holo_blue_light"
             android:layout_marginTop="16dp"

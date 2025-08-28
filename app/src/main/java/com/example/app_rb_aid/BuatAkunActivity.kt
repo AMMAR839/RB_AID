@@ -24,8 +24,13 @@ class BuatAkunActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
+        binding.btntxtMasuk.setOnClickListener{
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.btnDaftar.setOnClickListener {
-            val email = binding.edtNamaBuatAkun.text.toString()
+            val email = binding.edtEmailBuatAkun.text.toString()
             val nama = binding.edtNamaBuatAkun.text.toString()
             val password = binding.edtPasswordBuatAkun.text.toString()
 
