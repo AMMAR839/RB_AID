@@ -151,4 +151,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@android:color/white" />
 
+<<<<<<< Updated upstream
+=======
+
+
+    <ImageView
+        android:id="@+id/back_button_buat_akun"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/outline_arrow_back_ios_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
+>>>>>>> Stashed changes
 </androidx.constraintlayout.widget.ConstraintLayout>

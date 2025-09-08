@@ -80,7 +80,7 @@
                 android:backgroundTint="@color/transparent"
                 app:strokeWidth="2sp"
                 app:strokeColor="@color/white"
-                app:icon="@drawable/camera"
+                app:icon="@drawable/camera_svgrepo_com"
                 app:iconSize="40dp"
                 app:iconPadding="0dp"
                 app:iconGravity="textStart"
