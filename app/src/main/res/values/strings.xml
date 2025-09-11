@@ -25,6 +25,9 @@
     <string name="instruction_text">Lalu tekan pada bagian ini untuk memulai deteksi</string>
     <string name="camera_button_description">Tombol kamera</string>
     <string name="Keluar">Keluar</string>
+    <string name="nama_sekarang">John Doe</string>
+    <string name="nama_baru">Nama Baru</string>
+    <string name="ganti_nama">Ganti Nama</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
