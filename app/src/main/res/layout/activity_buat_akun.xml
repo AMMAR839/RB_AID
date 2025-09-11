@@ -7,8 +7,6 @@
     android:background="@drawable/background"
     tools:context=".BuatAkunActivity">
 
-
-
     <View
         android:id="@+id/overlay"
         android:layout_width="match_parent"
@@ -151,8 +149,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@android:color/white" />
 
-<<<<<<< Updated upstream
-=======
 
 
     <ImageView
@@ -166,5 +162,4 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="ContentDescription" />
 
->>>>>>> Stashed changes
 </androidx.constraintlayout.widget.ConstraintLayout>

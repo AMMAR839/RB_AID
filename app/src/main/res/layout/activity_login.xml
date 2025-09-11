@@ -32,8 +32,9 @@
     <TextView
         android:id="@+id/titleTextView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="40sp"
         android:text="@string/rb_aid2"
+        android:fontFamily="@font/righteous"
         android:textColor="@android:color/white"
         android:textSize="40sp"
         android:textStyle="bold"
@@ -42,6 +43,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.6" />
+
+    <TextView
+        android:id="@+id/subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Mobile_Decision_System"
+        android:textSize="20sp"
+        android:fontFamily="@font/roboto"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/titleTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
 
     <Button
         android:id="@+id/btn_googleSignIn"
