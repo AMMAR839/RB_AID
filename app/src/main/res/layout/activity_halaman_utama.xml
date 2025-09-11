@@ -42,7 +42,7 @@
         <TextView
             android:id="@+id/kata"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:fontFamily="@font/righteous"
             android:text="@string/nama_aplikasi"
             android:textColor="@color/white"
