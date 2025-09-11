@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 
 class HasilActivity : AppCompatActivity() {
 
@@ -28,5 +29,14 @@ class HasilActivity : AppCompatActivity() {
         findViewById<ImageView>(R.id.back_button_data_pasien).setOnClickListener {
             finish()
         }
+
+        // tombol doktter
+        val doctorButton = findViewById<ImageView>(R.id.btn_Doctor)
+        doctorButton.setOnClickListener {
+            // Tambahkan logika untuk membuka halaman dokter di sini
+            val intent = Intent(this, HospitalListActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 }
