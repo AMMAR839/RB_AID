@@ -13,13 +13,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import android.view.View
+
 
 class CameraActivity : AppCompatActivity() {
+
+    private lateinit var flashOverlay: View
 
     private lateinit var previewView: androidx.camera.view.PreviewView
     private lateinit var instructionText: TextView
@@ -47,7 +50,7 @@ class CameraActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         instructionText = findViewById(R.id.instructionText)
         captureButton = findViewById(R.id.captureButton)
-
+        flashOverlay = findViewById(R.id.flashOverlay)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -62,6 +65,23 @@ class CameraActivity : AppCompatActivity() {
             takePhoto()
         }
     }
+
+    private fun showFlash() {
+        flashOverlay.alpha = 0f
+        flashOverlay.visibility = View.VISIBLE
+        flashOverlay.animate()
+            .alpha(1f)
+            .setDuration(100)
+            .withEndAction {
+                flashOverlay.animate()
+                    .alpha(0f)
+                    .setDuration(200)
+                    .withEndAction {
+                        flashOverlay.visibility = View.GONE
+                    }
+            }
+    }
+
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -99,6 +119,7 @@ class CameraActivity : AppCompatActivity() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    showFlash()
                     val uri = Uri.fromFile(photoFile)
                     if (currentEye == "RIGHT") {
                         rightEyeUri = uri
@@ -113,7 +134,7 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun goToResult() {
-        val intent = Intent(this, HasilActivity::class.java)
+        val intent = Intent(this, DataPasienActivity::class.java)
         intent.putExtra("RIGHT_EYE_URI", rightEyeUri.toString())
         intent.putExtra("LEFT_EYE_URI", leftEyeUri.toString())
         startActivity(intent)

@@ -51,12 +51,15 @@
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/PasienNama"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
                     android:hint="@string/nama"
                     android:padding="16dp"
-                    android:inputType="textPersonName" />
+                    android:inputType="textPersonName"
+                    android:background="@drawable/rounded2"
+                    />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -67,12 +70,14 @@
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/PasienNIK"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
                     android:hint="NIK"
                     android:padding="16dp"
-                    android:inputType="number" />
+                    android:inputType="number"
+                    android:background="@drawable/rounded2"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -88,17 +93,18 @@
                     android:drawablePadding="8dp"
                     android:hint="DD/MM/YY"
                     android:padding="16dp"
-                    android:inputType="date" />
+                    android:inputType="date"
+                    android:background="@drawable/rounded2"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/button_mulai"
+                android:id="@+id/button_simpan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:backgroundTint="@android:color/black"
                 android:padding="16dp"
-                android:text="MULAI"
+                android:text="SIMPAN"
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
                 app:cornerRadius="16dp" />

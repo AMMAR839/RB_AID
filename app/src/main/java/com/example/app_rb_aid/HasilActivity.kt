@@ -18,9 +18,12 @@ class HasilActivity : AppCompatActivity() {
         val ivMataKiri = findViewById<ImageView>(R.id.ivMataKiri)
         val tvDiagnosis = findViewById<TextView>(R.id.tvDiagnosis)
 
+        val nama = intent.getStringExtra("EXTRA_NAMA") ?: "-"
+        val nik = intent.getStringExtra("EXTRA_NIK") ?: "-"
+
         // Set data statis (dummy)
-        tvName.text = "Jane Doe"
-        tvNik.text = "321651413121432"
+        tvName.text = nama
+        tvNik.text = nik
         ivMataKanan.setImageResource(R.drawable.sehat_1)
         ivMataKiri.setImageResource(R.drawable.sehat_2)
         tvDiagnosis.text = "Tidak terindikasi terkena retinoblastoma"
