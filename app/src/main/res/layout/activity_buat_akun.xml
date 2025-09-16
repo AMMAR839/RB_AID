@@ -89,6 +89,28 @@
                     android:hint="Kata sandi"
                     android:padding="16dp"
                     android:inputType="textPassword" />
+
+
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundMode="none"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edt_KonfirmasiPassword_BuatAkun"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="8dp"
+                    android:background="@drawable/rounded"
+                    android:drawableStart="@drawable/lock"
+                    android:hint="Konfirmasi kata sandi"
+                    android:padding="16dp"
+                    android:inputType="textPassword" />
+
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button

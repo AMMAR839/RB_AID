@@ -33,6 +33,7 @@ class BuatAkunActivity : AppCompatActivity() {
             val email = binding.edtEmailBuatAkun.text.toString()
             val nama = binding.edtNamaBuatAkun.text.toString()
             val password = binding.edtPasswordBuatAkun.text.toString()
+            val konfPassword = binding.edtKonfirmasiPasswordBuatAkun.text.toString()
 
             if (email.isEmpty()){
                 binding.edtEmailBuatAkun.error = "Email harus diisi"
@@ -58,11 +59,24 @@ class BuatAkunActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (konfPassword.isEmpty()) {
+                binding.edtKonfirmasiPasswordBuatAkun.error = "Konfirmasi password tidak boleh kosong"
+                binding.edtKonfirmasiPasswordBuatAkun.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (konfPassword != password) {
+                binding.edtKonfirmasiPasswordBuatAkun.error = "Password tidak sama"
+                binding.edtKonfirmasiPasswordBuatAkun.requestFocus()
+                return@setOnClickListener
+            }
+
             if (nama.isEmpty()){
                 binding.edtNamaBuatAkun.error = "Nama harus diisi"
                 binding.edtNamaBuatAkun.requestFocus()
                 return@setOnClickListener
             }
+
 
             RegisterFirebase(email,password)
         }
