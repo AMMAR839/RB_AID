@@ -13,6 +13,13 @@
         android:theme="@style/Theme.APP_rb_aid"
         tools:targetApi="31">
         <activity
+            android:name=".GantiNamaActivity"
+            android:exported="false"
+            android:theme="@style/Theme.APP_rb_aid" />
+        <activity
+            android:name=".GantiPassActivity"
+            android:exported="false" />
+        <activity
             android:name=".BuatAkunActivity"
             android:exported="false" />
         <activity
@@ -26,7 +33,7 @@
         </activity>
         <activity
             android:name=".BerandaActivity"
-            android:exported="false"/>
+            android:exported="false" />
     </application>
 
 </manifest>
