@@ -23,19 +23,21 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="top">
+        android:gravity="top"
+        tools:layout_editor_absoluteX="-16dp"
+        tools:layout_editor_absoluteY="-48dp">
 
         <TextView
-            android:layout_gravity="top"
             android:id="@+id/infoTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="top"
             android:layout_marginStart="20dp"
             android:layout_marginTop="80dp"
             android:lineSpacingExtra="2dp"
             android:text="@string/there_are_8_000_new_cases_of_retinoblastoma_every_year"
             android:textColor="@android:color/white"
-            android:textSize="45sp"/>
+            android:textSize="45sp" />
     </RelativeLayout>
 
     <LinearLayout
@@ -45,17 +47,30 @@
         android:orientation="vertical">
 
 
-            <TextView
-                android:layout_gravity="center_horizontal"
-                android:id="@+id/startCheckTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="@string/mulai_cek_sekarang"
-                android:textColor="@android:color/white"
-                android:textSize="30dp"
-                app:layout_constraintBottom_toTopOf="@+id/tutorialButton"/>
+        <TextView
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/startCheckTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/mulai_cek_sekarang"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toTopOf="@+id/tutorialButton"/>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+            <ImageButton
+                android:id="@+id/setting_button"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:background="@null"
+                android:contentDescription="@null"
+                android:src="@drawable/setting_icon"
+                android:padding="8dp"
+                android:layout_margin="5dp"/>
 
             <Button
                 android:layout_gravity="center_horizontal"
@@ -65,10 +80,11 @@
                 android:layout_marginBottom="10dp"
                 android:backgroundTint="@android:color/holo_orange_light"
                 android:paddingVertical="7dp"
-                android:paddingHorizontal="80dp"
+                android:paddingHorizontal="50dp"
                 android:text="@string/tutorial"
-                android:textSize="25dp"
+                android:textSize="25sp"
                 android:textColor="@android:color/white" />
+        </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:layout_gravity="center_horizontal"
@@ -90,20 +106,20 @@
                 app:layout_constraintTop_toBottomOf="@+id/tutorialButton"
                 app:layout_constraintVertical_chainStyle="packed" />
 
-            <TextView
-                android:layout_gravity="center_horizontal"
-                android:id="@+id/signOutTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
-                android:clickable="true"
-                android:text="@string/Keluar"
-                android:textColor="@android:color/holo_blue_light"
-                android:textSize="16sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/cameraButton" />
+        <TextView
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/btn_Keluar"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:text="@string/Keluar"
+            android:textColor="@android:color/holo_blue_light"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cameraButton" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

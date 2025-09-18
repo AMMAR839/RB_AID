@@ -2,10 +2,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background"
-    tools:context=".BuatAkunActivity">
+    tools:context=".GantiPassActivity">
 
     <View
         android:id="@+id/overlay"
@@ -40,15 +41,15 @@
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edt_email_BuatAkun"
+                    android:id="@+id/edt_Password_Lama"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/rounded"
-                    android:drawableStart="@drawable/email"
+                    android:drawableStart="@drawable/lock"
                     android:drawablePadding="8dp"
-                    android:hint="Email"
+                    android:hint="Kata sandi Lama"
                     android:padding="16dp"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="textPassword" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -59,16 +60,17 @@
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edt_nama_BuatAkun"
+                    android:id="@+id/edt_Password_Baru"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/rounded"
-                    android:drawableStart="@drawable/acun"
+                    android:drawableStart="@drawable/lock"
                     android:drawablePadding="8dp"
-                    android:hint="Nama"
+                    android:hint="Kata sandi Baru"
                     android:padding="16dp"
-                    android:inputType="textPersonName" />
+                    android:inputType="textPassword" />
             </com.google.android.material.textfield.TextInputLayout>
+
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -78,80 +80,37 @@
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edt_password_BuatAkun"
+                    android:id="@+id/edt_Konfirmasi_Password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
                     android:background="@drawable/rounded"
                     android:drawableStart="@drawable/lock"
-                    android:hint="Kata sandi"
+                    android:hint="Konfirmasi kata sandi baru"
                     android:padding="16dp"
                     android:inputType="textPassword" />
-
-
-            </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:boxBackgroundMode="none"
-                app:hintEnabled="false">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edt_KonfirmasiPassword_BuatAkun"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="8dp"
-                    android:background="@drawable/rounded"
-                    android:drawableStart="@drawable/lock"
-                    android:hint="Konfirmasi kata sandi"
-                    android:padding="16dp"
-                    android:inputType="textPassword" />
-
-
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/btn_daftar"
+                android:id="@+id/btn_ganti_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:backgroundTint="@android:color/black"
                 android:padding="16dp"
-                android:text="DAFTAR"
+                android:text="Ganti Password"
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
                 app:cornerRadius="16dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Sudah punya akun?"
-                android:textAlignment="center"
-                android:textColor="@android:color/darker_gray"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/btntxt_masuk"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:clickable="true"
-                android:text="Masuk"
-                android:textAlignment="center"
-                android:textColor="@android:color/holo_blue_light"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
     <TextView
-        android:id="@+id/textView_create_account"
+        android:id="@+id/txt_ganti_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Buat Akunmu"
+        android:text="Ganti Password"
         android:textColor="@android:color/white"
         android:textSize="32sp"
         android:textStyle="bold"
@@ -159,29 +118,16 @@
         app:layout_constraintStart_toStartOf="@+id/cardView" />
 
     <ImageButton
-        android:id="@+id/back_button"
+        android:id="@+id/btn_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:background="@drawable/back_button"
         android:contentDescription="Back"
         android:padding="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@android:color/white" />
-
-
-
-    <ImageView
-        android:id="@+id/back_button_buat_akun"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/outline_arrow_back_ios_24"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
