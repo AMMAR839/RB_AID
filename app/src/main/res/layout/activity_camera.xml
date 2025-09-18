@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Kamera Preview -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+    <com.example.app_rb_aid.CameraOverlayView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Teks petunjuk -->
+    <TextView
+        android:id="@+id/instructionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ambil foto mata kanan"
+        android:layout_marginTop="150dp"
+        android:textSize="24sp"
+        android:textColor="@android:color/white"
+        android:layout_gravity="top|center_horizontal"
+        android:padding="20dp"/>
+
+    <!-- Tombol ambil foto -->
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/captureButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="40dp"
+        app:backgroundTint="@color/orange"
+        app:cornerRadius="45dp"
+        app:icon="@drawable/camera_svgrepo_com"
+        app:iconSize="60dp"
+        app:iconGravity="textStart"/>
+
+    <View
+        android:id="@+id/flashOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFFFF"
+        android:alpha="0"
+        android:visibility="gone"/>
+</FrameLayout>

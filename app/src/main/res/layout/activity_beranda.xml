@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
+    android:background="@drawable/beranda"
     tools:context=".BerandaActivity">
 
-    <!-- Background Image (assuming it's one image) -->
+
     <ImageView
         android:id="@+id/backgroundImageView"
         android:layout_width="0dp"
@@ -86,26 +86,25 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:layout_gravity="center"
-            android:id="@+id/cameraButton"
-            android:layout_width="275dp"
-            android:layout_height="55dp"
-            android:layout_marginBottom="10dp"
-            android:textColor="@android:color/black"
-            android:backgroundTint="@color/transparent"
-            app:strokeWidth="2sp"
-            app:strokeColor="@color/white"
-            app:icon="@drawable/camera"
-            app:iconTint="@color/white"
-            app:iconSize="40dp"
-            app:iconPadding="0dp"
-            app:iconGravity="textStart"
-            app:layout_constraintBottom_toTopOf="@+id/signOutTextView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tutorialButton"
-            app:layout_constraintVertical_chainStyle="packed" />
+            <com.google.android.material.button.MaterialButton
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/cameraButton"
+                android:layout_width="275dp"
+                android:layout_height="55dp"
+                android:layout_marginBottom="10dp"
+                android:textColor="@android:color/black"
+                android:backgroundTint="@color/transparent"
+                app:strokeWidth="2sp"
+                app:strokeColor="@color/white"
+                app:icon="@drawable/camera_svgrepo_com"
+                app:iconSize="40dp"
+                app:iconPadding="0dp"
+                app:iconGravity="textStart"
+                app:layout_constraintBottom_toTopOf="@+id/signOutTextView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tutorialButton"
+                app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
             android:layout_gravity="center_horizontal"

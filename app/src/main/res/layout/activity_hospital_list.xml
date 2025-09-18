@@ -6,12 +6,14 @@
     android:layout_height="match_parent"
     android:background="@drawable/beranda">
 
+    <!-- Overlay hitam transparan -->
     <View
         android:id="@+id/overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#66000000" />
 
+    <!-- CardView berisi judul + RecyclerView -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
         android:layout_width="0dp"
@@ -21,7 +23,7 @@
         android:layout_marginTop="100dp"
         android:layout_marginBottom="16dp"
         app:cardCornerRadius="24dp"
-        app:cardBackgroundColor="#CC000000"
+        app:cardBackgroundColor="@color/white"
         app:layout_constraintBottom_toTopOf="@+id/textView_info"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="OFTALMOLOGIS TERDEKAT"
-                android:textColor="@android:color/white"
+                android:textColor="@android:color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp" />
@@ -52,6 +54,7 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <!-- Info bawah -->
     <TextView
         android:id="@+id/textView_info"
         android:layout_width="0dp"
@@ -60,37 +63,11 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="16dp"
         android:gravity="center"
-        android:text="Tekan nama rumah sakit untuk membuka lokasi maps.\nTekan logo kirim untuk langsung mengirim email rujukan ke rumah sakit"
+        android:text="Tekan nama rumah sakit untuk konfirmasi dan mengirim email dummy."
         android:textColor="@android:color/white"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
-    <ImageButton
-        android:id="@+id/back_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Back"
-        android:padding="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@android:color/white" />
-
-    <TextView
-        android:id="@+id/time_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="9:41"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
