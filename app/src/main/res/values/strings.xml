@@ -25,6 +25,7 @@
     <string name="instruction_text">Lalu tekan pada bagian ini untuk memulai deteksi</string>
     <string name="camera_button_description">Tombol kamera</string>
     <string name="Keluar">Keluar</string>
+    <string name="info_reset_pass">*Link reset password akan dikirimkan ke alamat email, tolong cek pada folder spam</string>
     <string name="nama_aplikasi">Rb-AID\n</string>
     <string name="Mobile_Decision_System">Mobile Decision System</string>
     <string name="tombol_dokter">TEKAN SIMBOL DOKTER UNTUK LOKASI\nRUJUKAN TERDEKAT</string>

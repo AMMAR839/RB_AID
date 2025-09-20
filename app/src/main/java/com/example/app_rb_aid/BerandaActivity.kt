@@ -10,7 +10,6 @@ import com.example.app_rb_aid.databinding.ActivityBerandaBinding
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.auth.FirebaseAuth
-import android.content.Intent
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
@@ -34,8 +33,12 @@ class BerandaActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
+        binding.settingButton.setOnClickListener {
+            val intent = Intent(this, GantiNamaActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.btnKeluar.setOnClickListener {
-            Toast.makeText(this, "Keluar diklik", Toast.LENGTH_SHORT).show()
             auth.signOut()
             val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

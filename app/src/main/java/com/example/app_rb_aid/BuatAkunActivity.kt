@@ -10,6 +10,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.app_rb_aid.databinding.ActivityBuatAkunBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class BuatAkunActivity : AppCompatActivity() {
 
@@ -84,15 +85,35 @@ class BuatAkunActivity : AppCompatActivity() {
 
     private fun RegisterFirebase(email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this){
-                if (it.isSuccessful){
-                    Toast.makeText(this, "Buat Akun Berhasil", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, LoginActivity::class.java)
-                    startActivity(intent)
-                } else{
-                    Toast.makeText(this, "${it.exception?.message}", Toast.LENGTH_SHORT).show()
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Ambil UID dari user yang baru dibuat
+                    val userId = auth.currentUser?.uid
+                    val nama = binding.edtNamaBuatAkun.text.toString()
+
+                    // Data yang mau disimpan
+                    val userMap = hashMapOf(
+                        "nama" to nama,
+                        "email" to email
+                    )
+
+                    if (userId != null) {
+                        val db = FirebaseFirestore.getInstance()
+                        db.collection("users")
+                            .document(userId)
+                            .set(userMap)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Buat Akun Berhasil", Toast.LENGTH_SHORT).show()
+                                val intent = Intent(this, LoginActivity::class.java)
+                                startActivity(intent)
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Gagal simpan data: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                } else {
+                    Toast.makeText(this, "${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
-
     }
 }

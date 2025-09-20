@@ -33,6 +33,11 @@ class LoginActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
+        binding.btntxtLupaPassword.setOnClickListener {
+            val intent = Intent(this, ResetPasswordActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.btntxtBuatAkun.setOnClickListener {
             val intent = Intent(this, BuatAkunActivity::class.java)
             startActivity(intent)
@@ -51,11 +56,6 @@ class LoginActivity : AppCompatActivity() {
             launcher.launch(signInIntent)
         }
         //fds
-
-        binding.btntxtGantiPassword.setOnClickListener {
-            val intent = Intent(this, GantiPassActivity::class.java)
-            startActivity(intent)
-        }
 
         binding.btnMasuk.setOnClickListener{
             val email = binding.edtEmailMasuk.text.toString()
@@ -124,16 +124,16 @@ class LoginActivity : AppCompatActivity() {
                 } else{
                     try {
                         throw it.exception!!
-                    } catch (e: FirebaseAuthInvalidCredentialsException) {
-                        // Salah password
-                        Toast.makeText(this, "Password salah", Toast.LENGTH_SHORT).show()
-                        binding.edtPasswordMasuk.error = "Password salah"
-                        binding.edtPasswordMasuk.requestFocus()
                     } catch (e: FirebaseAuthInvalidUserException) {
                         // Email tidak terdaftar
                         Toast.makeText(this, "Email belum terdaftar", Toast.LENGTH_SHORT).show()
                         binding.edtEmailMasuk.error = "Email belum terdaftar"
                         binding.edtEmailMasuk.requestFocus()
+                    } catch (e: FirebaseAuthInvalidCredentialsException) {
+                        // Salah password
+                        Toast.makeText(this, "Password salah", Toast.LENGTH_SHORT).show()
+                        binding.edtPasswordMasuk.error = "Password salah"
+                        binding.edtPasswordMasuk.requestFocus()
                     } catch (e: Exception) {
                         // Error umum lain
                         Toast.makeText(this, "${e.message}", Toast.LENGTH_SHORT).show()
