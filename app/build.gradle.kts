@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.firestore)
     val camerax_version = "1.3.4"
     implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
     implementation("com.google.firebase:firebase-analytics")
