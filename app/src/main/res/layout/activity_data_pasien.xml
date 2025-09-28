@@ -80,18 +80,27 @@
                     android:background="@drawable/rounded2"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <DatePicker
-                android:id="@+id/datePicker"
-                android:layout_gravity="center"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:calendarViewShown="false"
-                android:datePickerMode="spinner"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_marginTop="16dp"
+                >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/txt_Tanggal_Lahir_Pasien"
+                    android:background="@drawable/rounded"
+                    android:text="day/month/year"
+                    android:textSize="13dp" />
 
+                <ImageButton
+                    android:id="@+id/imgbtn_calendar_pasien"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/calendar"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_simpan"
