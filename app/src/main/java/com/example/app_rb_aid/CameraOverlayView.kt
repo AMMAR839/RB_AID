@@ -1,15 +1,21 @@
 package com.example.app_rb_aid
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.graphics.toColorInt
 
 class CameraOverlayView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
     private val dimPaint = Paint().apply {
-        color = Color.parseColor("#80000000") // Hitam transparan
+        color = "#80000000".toColorInt() // Hitam transparan
         style = Paint.Style.FILL
+    }
+
+    private val clearPaint = Paint().apply {
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
     }
 
     private val borderPaint = Paint().apply {
@@ -19,20 +25,31 @@ class CameraOverlayView(context: Context, attrs: AttributeSet?) : View(context, 
         isAntiAlias = true
     }
 
+    @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        // Layer gelap semi-transparan
+        // Aktifkan layer baru agar mode CLEAR bisa bekerja
+        val saved = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
+
+        // Gambar layer gelap transparan di seluruh layar
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), dimPaint)
 
-        // Kotak retina di tengah layar
+        // Buat kotak di tengah layar
         val boxSize = width * 0.6f
         val left = (width - boxSize) / 2
         val top = (height - boxSize) / 2
         val right = left + boxSize
         val bottom = top + boxSize
-
         val rect = RectF(left, top, right, bottom)
+
+        // Lubangi bagian dalam kotak agar transparan
+        canvas.drawRoundRect(rect, 32f, 32f, clearPaint)
+
+        // Gambar border putih di sekeliling kotak
         canvas.drawRoundRect(rect, 32f, 32f, borderPaint)
+
+        // Kembalikan layer
+        canvas.restoreToCount(saved)
     }
 }

@@ -20,18 +20,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="ContentDescription" />
 
-
-    <ImageView
-        android:id="@+id/back_button"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/outline_arrow_back_ios_24"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
-
     <TextView
         android:id="@+id/title_text"
         android:layout_width="wrap_content"
@@ -93,25 +81,45 @@
         android:text="@string/mulai_cek_sekarang"
         android:textColor="@android:color/white"
         android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/tutorialButton"
+        app:layout_constraintBottom_toTopOf="@+id/buttonLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
 
-    <Button
-        android:id="@+id/tutorialButton"
+
+
+    <LinearLayout
+        android:id="@+id/buttonLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:backgroundTint="@android:color/holo_orange_light"
-        android:paddingHorizontal="80dp"
-        android:paddingVertical="7dp"
-        android:text="@string/tutorial"
-        android:textColor="@android:color/white"
-        android:textSize="25sp"
+        android:layout_gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/cameraButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        >
+        <ImageButton
+            android:id="@+id/setting_button"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@null"
+            android:contentDescription="@null"
+            android:src="@drawable/setting_icon"
+            android:padding="8dp"
+            android:layout_margin="5dp"/>
+
+        <Button
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/tutorialButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:backgroundTint="@android:color/holo_orange_light"
+            android:paddingVertical="7dp"
+            android:paddingHorizontal="50dp"
+            android:text="@string/tutorial"
+            android:textSize="25sp"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/signOutTextView"
@@ -129,11 +137,24 @@
     <ImageView
         android:id="@+id/dark_overlay"
         android:layout_width="match_parent"
-        android:layout_height="625dp"
+        android:layout_height="0dp"
         android:alpha="0.7"
         android:background="#000000"
-        app:layout_constraintBottom_toBottomOf="@+id/tutorialButton"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonLayout"
         app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/outline_arrow_back_ios_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
         />
 
     <ImageView

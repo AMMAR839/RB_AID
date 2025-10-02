@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
-    <!-- Kamera Preview -->
+    <!-- Preview kamera -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-
+    <!-- Overlay kotak bidik -->
     <com.example.app_rb_aid.CameraOverlayView
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -25,27 +25,74 @@
         android:textSize="24sp"
         android:textColor="@android:color/white"
         android:layout_gravity="top|center_horizontal"
-        android:padding="20dp"/>
+        android:padding="20dp" />
 
-    <!-- Tombol ambil foto -->
+    <!-- PRATINJAU FOTO (muncul saat review) -->
+    <ImageView
+        android:id="@+id/capturedImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/captureButton"
+    <!-- Tombol ULANG (kiri bawah) -->
+    <!-- AKSI REVIEW -->
+    <LinearLayout
+        android:id="@+id/reviewActions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="40dp"
-        app:backgroundTint="@color/orange"
-        app:cornerRadius="45dp"
-        app:icon="@drawable/camera_svgrepo_com"
-        app:iconSize="60dp"
-        app:iconGravity="textStart"/>
+        android:layout_marginBottom="36dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:visibility="gone">
 
+        <!-- Ulang: FAB bulat -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/redoFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:contentDescription="Ambil ulang"
+            app:srcCompat="@drawable/ic_round_retake"
+            app:fabCustomSize="72dp"
+            app:maxImageSize="28dp"
+            app:backgroundTint="@android:color/white"
+            app:tint="@android:color/black" />
+
+        <!-- Centang: FAB bulat -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/confirmFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Lanjut"
+            app:srcCompat="@drawable/ic_round_check"
+            app:fabCustomSize="72dp"
+            app:maxImageSize="28dp"
+            app:backgroundTint="@color/orange"
+            app:tint="@android:color/white" />
+    </LinearLayout>
+
+    <!-- Tombol JEPRET (bulat) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/captureFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="36dp"
+        android:contentDescription="Ambil foto"
+        app:srcCompat="@drawable/camera_svgrepo_com"
+        app:fabCustomSize="84dp"
+        app:maxImageSize="32dp"
+        app:backgroundTint="@color/orange"
+        app:tint="@android:color/white" />
+
+    <!-- Flash putih -->
     <View
         android:id="@+id/flashOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#FFFFFFFF"
         android:alpha="0"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 </FrameLayout>

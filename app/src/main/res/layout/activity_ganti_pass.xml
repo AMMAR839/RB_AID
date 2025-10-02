@@ -44,12 +44,13 @@
                     android:id="@+id/edt_Password_Lama"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/rounded2"
                     android:drawableStart="@drawable/lock"
                     android:drawablePadding="8dp"
                     android:hint="Kata sandi Lama"
                     android:padding="16dp"
-                    android:inputType="textPassword" />
+                    android:inputType="textPassword"
+                    android:textColor="@color/black"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -63,12 +64,13 @@
                     android:id="@+id/edt_Password_Baru"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/rounded2"
                     android:drawableStart="@drawable/lock"
                     android:drawablePadding="8dp"
                     android:hint="Kata sandi Baru"
                     android:padding="16dp"
-                    android:inputType="textPassword" />
+                    android:inputType="textPassword"
+                    android:textColor="@color/black"/>
             </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -84,11 +86,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/rounded2"
                     android:drawableStart="@drawable/lock"
                     android:hint="Konfirmasi kata sandi baru"
                     android:padding="16dp"
-                    android:inputType="textPassword" />
+                    android:inputType="textPassword"
+                    android:textColor="@color/black"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button

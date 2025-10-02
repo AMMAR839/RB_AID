@@ -1,10 +1,11 @@
 package com.example.app_rb_aid
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import android.content.Intent
 
 class HasilActivity : AppCompatActivity() {
 
@@ -21,25 +22,34 @@ class HasilActivity : AppCompatActivity() {
         val nama = intent.getStringExtra("EXTRA_NAMA") ?: "-"
         val nik = intent.getStringExtra("EXTRA_NIK") ?: "-"
 
-        // Set data statis (dummy)
+        val rightUri = intent.getStringExtra("RIGHT_EYE_URI")
+        val leftUri  = intent.getStringExtra("LEFT_EYE_URI")
+        val diagnosis = intent.getStringExtra("DIAGNOSIS") ?: "-"
+
+        val rLabel = intent.getStringExtra("RIGHT_LABEL") ?: "?"
+        val rScore = intent.getFloatExtra("RIGHT_SCORE", -1f)
+        val lLabel = intent.getStringExtra("LEFT_LABEL") ?: "?"
+        val lScore = intent.getFloatExtra("LEFT_SCORE", -1f)
+
         tvName.text = nama
         tvNik.text = nik
-        ivMataKanan.setImageResource(R.drawable.sehat_1)
-        ivMataKiri.setImageResource(R.drawable.sehat_2)
-        tvDiagnosis.text = "Tidak terindikasi terkena retinoblastoma"
 
-        // tombol back
+        rightUri?.let { ivMataKanan.setImageURI(Uri.parse(it)) }
+        leftUri?.let  { ivMataKiri.setImageURI(Uri.parse(it))  }
+
+        tvDiagnosis.text = buildString {
+            append(diagnosis)
+            append("\n")
+            append("Mata kanan: $rLabel (p=${"%.2f".format(rScore)}) | ")
+            append("Mata kiri: $lLabel (p=${"%.2f".format(lScore)})")
+        }
+
         findViewById<ImageView>(R.id.back_button_data_pasien).setOnClickListener {
             finish()
         }
 
-        // tombol doktter
-        val doctorButton = findViewById<ImageView>(R.id.btn_Doctor)
-        doctorButton.setOnClickListener {
-            // Tambahkan logika untuk membuka halaman dokter di sini
-            val intent = Intent(this, HospitalListActivity::class.java)
-            startActivity(intent)
+        findViewById<ImageView>(R.id.btn_Doctor).setOnClickListener {
+            startActivity(Intent(this, HospitalListActivity::class.java))
         }
-
     }
 }
