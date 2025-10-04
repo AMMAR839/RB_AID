@@ -197,20 +197,32 @@ class CameraActivity : AppCompatActivity() {
 
     //===== Mode Review =====
     private fun enterReview(uri: Uri) {
+        // Pastikan gambar tidak di-zoom
+        capturedImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+        capturedImageView.adjustViewBounds = true
+
+        // Sembunyikan overlay saat mode review
+        overlayView.visibility = View.GONE
+
+        // Ubah state ke mode review
         isReviewMode = true
         pendingPhotoUri = uri
 
+        // Tampilkan gambar hasil foto
         capturedImageView.setImageURI(uri)
         capturedImageView.visibility = View.VISIBLE
 
+        // Tampilkan tombol aksi review, sembunyikan tombol jepret
         reviewActions.visibility = View.VISIBLE
         captureFab.visibility = View.GONE
 
+        // Ubah teks instruksi
         instructionText.text = if (currentEye == "RIGHT")
             "Periksa foto mata kanan"
         else
             "Periksa foto mata kiri"
     }
+
 
     private fun exitReview(deleteFile: Boolean) {
         if (deleteFile) {
@@ -224,7 +236,7 @@ class CameraActivity : AppCompatActivity() {
 
         reviewActions.visibility = View.GONE
         captureFab.visibility = View.VISIBLE
-
+        overlayView.visibility = View.VISIBLE
         instructionText.text = if (currentEye == "RIGHT")
             "Ambil foto mata kanan" else "Ambil foto mata kiri"
     }

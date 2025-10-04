@@ -33,10 +33,11 @@
         android:id="@+id/capturedImageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
+        android:scaleType="centerInside"
+        android:adjustViewBounds="true"
+        android:background="#000000"
         android:visibility="gone" />
 
-    <!-- Tombol ULANG (kiri bawah) -->
     <!-- AKSI REVIEW -->
     <LinearLayout
         android:id="@+id/reviewActions"
@@ -48,7 +49,6 @@
         android:gravity="center"
         android:visibility="gone">
 
-        <!-- Ulang: FAB bulat -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/redoFab"
             android:layout_width="wrap_content"
@@ -61,7 +61,6 @@
             app:backgroundTint="@android:color/white"
             app:tint="@android:color/black" />
 
-        <!-- Centang: FAB bulat -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/confirmFab"
             android:layout_width="wrap_content"
@@ -74,7 +73,7 @@
             app:tint="@android:color/white" />
     </LinearLayout>
 
-    <!-- Tombol JEPRET (bulat) -->
+    <!-- Tombol JEPRET -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/captureFab"
         android:layout_width="wrap_content"
