@@ -3,6 +3,7 @@ package com.example.app_rb_aid
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -21,6 +22,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -30,11 +32,12 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var previewView: androidx.camera.view.PreviewView
     private lateinit var instructionText: TextView
     private lateinit var flashOverlay: View
+    private lateinit var overlayView: CameraOverlayView // <-- NEW
 
     // Mode bidik (jepret)
     private lateinit var captureFab: FloatingActionButton
 
-    // Mode review (pratinjau + tombol ulang/centang)
+    // Mode review
     private lateinit var capturedImageView: ImageView
     private lateinit var reviewActions: LinearLayout
     private lateinit var redoFab: FloatingActionButton
@@ -45,7 +48,7 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
 
     // State proses mata
-    private var currentEye = "RIGHT"           // mulai dari mata kanan
+    private var currentEye = "RIGHT"
     private var rightEyeUri: Uri? = null
     private var leftEyeUri: Uri? = null
 
@@ -71,7 +74,7 @@ class CameraActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         instructionText = findViewById(R.id.instructionText)
         flashOverlay = findViewById(R.id.flashOverlay)
-
+        overlayView = findViewById(R.id.CameraOverlayView)
         captureFab = findViewById(R.id.captureFab)
 
         capturedImageView = findViewById(R.id.capturedImageView)
@@ -81,7 +84,6 @@ class CameraActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // Teks awal
         instructionText.text = "Ambil foto mata kanan"
 
         // Permission kamera
@@ -95,12 +97,11 @@ class CameraActivity : AppCompatActivity() {
 
         // Actions
         captureFab.setOnClickListener { takePhoto() }
-        redoFab.setOnClickListener { exitReview(deleteFile = true) } // ambil ulang
-        confirmFab.setOnClickListener { confirmPhotoAndProceed() }   // lanjut
+        redoFab.setOnClickListener { exitReview(deleteFile = true) }
+        confirmFab.setOnClickListener { confirmPhotoAndProceed() }
     }
 
     //===== Camera =====
-
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
@@ -110,9 +111,7 @@ class CameraActivity : AppCompatActivity() {
                 it.setSurfaceProvider(previewView.surfaceProvider)
             }
 
-            imageCapture = ImageCapture.Builder()
-                // .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .build()
+            imageCapture = ImageCapture.Builder().build()
 
             try {
                 cameraProvider.unbindAll()
@@ -131,8 +130,17 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         if (isReviewMode) return
-        val imageCapture = imageCapture ?: return
 
+        // === Cara utama: snapshot preview + crop ROI dari overlay ===
+        captureRoiFromPreview()?.let { roiFile ->
+            showFlash()
+            lastPhotoFile = roiFile
+            enterReview(Uri.fromFile(roiFile))
+            return
+        }
+
+        // === Fallback: pakai ImageCapture biasa kalau snapshot belum siap ===
+        val imageCapture = imageCapture ?: return
         val dir = externalCacheDir ?: cacheDir
         val photoFile = File(dir, "${System.currentTimeMillis()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -144,19 +152,50 @@ class CameraActivity : AppCompatActivity() {
                 override fun onError(exc: ImageCaptureException) {
                     Toast.makeText(this@CameraActivity, "Gagal mengambil foto", Toast.LENGTH_SHORT).show()
                 }
-
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     showFlash()
                     lastPhotoFile = photoFile
-                    val uri = Uri.fromFile(photoFile)
-                    enterReview(uri)
+                    enterReview(Uri.fromFile(photoFile))
                 }
             }
         )
     }
 
-    //===== Mode Review =====
+    /** Ambil bitmap dari PreviewView, crop sesuai kotak overlay, simpan JPG di cache. */
+    private fun captureRoiFromPreview(): File? {
+        val bmp: Bitmap = previewView.bitmap ?: run {
+            Toast.makeText(this, "Frame belum siap. Coba lagi...", Toast.LENGTH_SHORT).show()
+            return null
+        }
 
+        val box = overlayView.getBoxRect()
+        // Clamp biar aman
+        val left   = box.left.coerceIn(0f, bmp.width - 1f)
+        val top    = box.top .coerceIn(0f, bmp.height - 1f)
+        val right  = box.right.coerceIn(left + 1f, bmp.width.toFloat())
+        val bottom = box.bottom.coerceIn(top + 1f, bmp.height.toFloat())
+
+        val cropW = (right - left).toInt()
+        val cropH = (bottom - top).toInt()
+        if (cropW < 4 || cropH < 4) {
+            Toast.makeText(this, "Kotak terlalu kecil", Toast.LENGTH_SHORT).show()
+            return null
+        }
+
+        val cropped = Bitmap.createBitmap(bmp, left.toInt(), top.toInt(), cropW, cropH)
+
+        // (Opsional) langsung resize ke 224x224 agar konsisten dengan model:
+        // val resized = Bitmap.createScaledBitmap(cropped, 224, 224, true)
+
+        val dir = externalCacheDir ?: cacheDir
+        val outFile = File(dir, "roi_${System.currentTimeMillis()}.jpg")
+        FileOutputStream(outFile).use { fos ->
+            cropped.compress(Bitmap.CompressFormat.JPEG, 95, fos)
+        }
+        return outFile
+    }
+
+    //===== Mode Review =====
     private fun enterReview(uri: Uri) {
         isReviewMode = true
         pendingPhotoUri = uri
@@ -164,7 +203,6 @@ class CameraActivity : AppCompatActivity() {
         capturedImageView.setImageURI(uri)
         capturedImageView.visibility = View.VISIBLE
 
-        // Tampilkan tombol review, sembunyikan tombol jepret
         reviewActions.visibility = View.VISIBLE
         captureFab.visibility = View.GONE
 
@@ -178,7 +216,6 @@ class CameraActivity : AppCompatActivity() {
         if (deleteFile) {
             try { lastPhotoFile?.delete() } catch (_: Exception) {}
         }
-
         isReviewMode = false
         pendingPhotoUri = null
 
@@ -189,14 +226,11 @@ class CameraActivity : AppCompatActivity() {
         captureFab.visibility = View.VISIBLE
 
         instructionText.text = if (currentEye == "RIGHT")
-            "Ambil foto mata kanan"
-        else
-            "Ambil foto mata kiri"
+            "Ambil foto mata kanan" else "Ambil foto mata kiri"
     }
 
     private fun confirmPhotoAndProceed() {
         val uri = pendingPhotoUri ?: return
-
         if (currentEye == "RIGHT") {
             rightEyeUri = uri
             currentEye = "LEFT"
@@ -209,23 +243,19 @@ class CameraActivity : AppCompatActivity() {
     }
 
     //===== UI efek =====
-
     private fun showFlash() {
         flashOverlay.alpha = 0f
         flashOverlay.visibility = View.VISIBLE
         flashOverlay.animate()
-            .alpha(1f)
-            .setDuration(100)
+            .alpha(1f).setDuration(100)
             .withEndAction {
                 flashOverlay.animate()
-                    .alpha(0f)
-                    .setDuration(200)
+                    .alpha(0f).setDuration(200)
                     .withEndAction { flashOverlay.visibility = View.GONE }
             }
     }
 
     //===== Hasil =====
-
     private fun goToResult() {
         val intent = Intent(this, DataPasienActivity::class.java).apply {
             putExtra("RIGHT_EYE_URI", rightEyeUri?.toString())

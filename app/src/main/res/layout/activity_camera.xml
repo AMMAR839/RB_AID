@@ -12,6 +12,7 @@
 
     <!-- Overlay kotak bidik -->
     <com.example.app_rb_aid.CameraOverlayView
+        android:id="@+id/CameraOverlayView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
