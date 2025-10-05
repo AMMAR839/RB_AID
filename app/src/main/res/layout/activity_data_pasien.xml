@@ -44,63 +44,72 @@
             android:orientation="vertical"
             android:padding="24dp">
 
+
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPasienNama"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:boxBackgroundMode="none"
-                app:hintEnabled="false">
+                app:hintEnabled="false"
+                app:errorEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/PasienNama"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawablePadding="8dp"
                     android:hint="@string/nama"
                     android:padding="16dp"
                     android:inputType="textPersonName"
-                    android:background="@drawable/rounded2"
-                    />
+                    android:background="@drawable/rounded2"/>
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- NIK -->
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPasienNIK"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 app:boxBackgroundMode="none"
-                app:hintEnabled="false">
+                app:hintEnabled="false"
+                app:errorEnabled="true"
+                app:counterEnabled="true"
+                app:counterMaxLength="16">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/PasienNIK"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawablePadding="8dp"
+                    android:digits="0123456789"
+                    android:maxLength="16"
                     android:hint="NIK"
                     android:padding="16dp"
                     android:inputType="number"
                     android:background="@drawable/rounded2"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <LinearLayout
+            <!-- TANGGAL LAHIR -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPasienTanggal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                >
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/txt_Tanggal_Lahir_Pasien"
-                    android:background="@drawable/rounded"
-                    android:text="day/month/year"
-                    android:textSize="13dp" />
+                app:boxBackgroundMode="none"
+                app:hintEnabled="false"
+                app:errorEnabled="true"
+                app:endIconMode="custom">
 
-                <ImageButton
-                    android:id="@+id/imgbtn_calendar_pasien"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/calendar"
-                    app:layout_constraintEnd_toEndOf="parent"/>
-            </LinearLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/PasienTanggal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="DD/MM/YYYY"
+                    android:padding="16dp"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:background="@drawable/rounded2"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_simpan"

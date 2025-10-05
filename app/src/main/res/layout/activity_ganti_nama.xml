@@ -106,4 +106,3 @@
         app:layout_constraintBottom_toTopOf="@+id/cardView"
         app:layout_constraintStart_toStartOf="@+id/cardView" />
 </androidx.constraintlayout.widget.ConstraintLayout>
-

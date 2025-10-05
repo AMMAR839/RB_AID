@@ -55,7 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingTop="5dp"
-                android:text="@string/info_reset_pass"
+                android:text="info_reset_pass"
                 android:textColor="@color/common_google_signin_btn_text_light"
                 android:textSize="12sp"/>
 

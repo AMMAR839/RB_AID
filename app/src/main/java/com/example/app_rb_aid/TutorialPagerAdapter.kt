@@ -1,25 +1,37 @@
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.Lifecycle
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.app_rb_aid.R
-import com.example.app_rb_aid.TutorialPageFragment
+package com.example.app_rb_aid
 
-class TutorialPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle) :
-    FragmentStateAdapter(fragmentManager, lifecycle) {
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import android.content.Intent
 
 
-    private val tutorialPages = listOf(
-        Pair("Pertama Pastikan \n Alat sudah siap", R.drawable.gambar_tutor),
-        Pair("Pastikan jarak mata dan \n lensa adalah 5 cm", R.drawable.satu),
-    )
+class TutorialPagerAdapter(
+    private val context: Context,
+    private val pages: List<Int>
+) : RecyclerView.Adapter<TutorialPagerAdapter.TutorialViewHolder>() {
 
-    override fun getItemCount(): Int {
-        return tutorialPages.size
+    class TutorialViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TutorialViewHolder {
+        val view = LayoutInflater.from(context).inflate(viewType, parent, false)
+        return TutorialViewHolder(view)
     }
 
-    override fun createFragment(position: Int): Fragment {
-        val (title, imageResId) = tutorialPages[position]
-        return TutorialPageFragment.newInstance(title, imageResId)
+    override fun onBindViewHolder(holder: TutorialViewHolder, position: Int) {
+        // Halaman terakhir memiliki tombol kamera
+        if (position == pages.size - 1) {
+            val cameraButton = holder.itemView.findViewById<View>(R.id.cameraButton)
+            cameraButton?.setOnClickListener {
+                val intent = Intent(context, BerandaActivity::class.java)
+                context.startActivity(intent)
+            }
+        }
     }
+
+    override fun getItemCount(): Int = pages.size
+
+    override fun getItemViewType(position: Int): Int = pages[position]
 }

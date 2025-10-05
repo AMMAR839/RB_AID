@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-
     id("com.google.gms.google-services")
 }
 
@@ -15,7 +14,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -28,50 +26,77 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures{
-        viewBinding = true
+    kotlinOptions { jvmTarget = "11" }
+    buildFeatures { viewBinding = true }
+
+    // Model .tflite jangan di-compress
+    androidResources { noCompress += "tflite" }
+
+    sourceSets {
+        getByName("main") {
+            assets {
+                // pakai path yang kamu gunakan
+                srcDirs("src\\main\\assets", "src\\main\\assets\\models")
+            }
+        }
     }
 }
 
 dependencies {
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.firestore)
-    implementation(libs.play.services.location)
-    val camerax_version = "1.3.4"
-    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
-    implementation("com.google.firebase:firebase-analytics")
+    // ---------- AndroidX dasar ----------
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.firebase.auth)
-    implementation("androidx.core:core-splashscreen:1.2.0-rc01")
-    implementation("com.google.android.gms:play-services-base:18.4.0")
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    // depedensi kamera
-    implementation("androidx.camera:camera-core:$camerax_version")
-    implementation("androidx.camera:camera-camera2:$camerax_version")
-    implementation("androidx.camera:camera-lifecycle:$camerax_version")
-    implementation("androidx.camera:camera-view:$camerax_version")
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    
+
+    // Material & Splashscreen
+    implementation(libs.material)
+    implementation(libs.androidx.core.splashscreen)
+
+    // ---------- CameraX ----------
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+    // ---------- TensorFlow Lite (opsional) ----------
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.task.vision)
+
+    // ---------- Coroutines & Lifecycle ----------
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // ---------- Firebase (pakai BOM) ----------
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.ml.modeldownloader)
+
+    // Firestore & Realtime Database (NON-KTX, sesuai kebutuhanmu)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.database)
+
+    // ---------- Google Sign-In & Location ----------
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.location)
+    // Tidak perlu play-services-base (transitif)
+
+    // ---------- Credentials / Google Identity (opsional) ----------
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
-    implementation("com.google.android.gms:play-services-auth:21.4.0")
-    implementation("com.google.firebase:firebase-auth:24.0.1")
+
+    // ---------- Test ----------
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
