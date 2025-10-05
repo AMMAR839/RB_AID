@@ -28,6 +28,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="ContentDescription" />
+
     <!-- Background -->
 
     <!-- Kartu hasil -->
@@ -42,7 +43,8 @@
         app:cardElevation="6dp"
         app:layout_constraintTop_toTopOf="@id/back_button_data_pasien"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:cardBackgroundColor="@color/white">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -50,7 +52,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Judul + ikon status -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
@@ -94,7 +95,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:tabIndicatorFullWidth="false"/>
+                app:tabIndicatorFullWidth="false"
+                app:tabRippleColor="@color/orange"
+
+                />
 
 
             <androidx.viewpager2.widget.ViewPager2

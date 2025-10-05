@@ -30,12 +30,12 @@ class DataPasienActivity : AppCompatActivity() {
     private lateinit var tilTanggal: TextInputLayout
     private lateinit var btnSimpan: MaterialButton
 
-    // dari CameraActivity
-    private lateinit var rightUri: String
-    private lateinit var leftUri: String
-    private lateinit var rightLabel: String
+    // dari CameraActivity (SEKARANG BOLEH NULL)
+    private var rightUri: String? = null
+    private var leftUri: String? = null
+    private var rightLabel: String? = null
     private var rightScore: Float = -1f
-    private lateinit var leftLabel: String
+    private var leftLabel: String? = null
     private var leftScore: Float = -1f
 
     private val sdfDisplay = SimpleDateFormat("dd/MM/yyyy", Locale("id", "ID")).apply { isLenient = false }
@@ -43,23 +43,29 @@ class DataPasienActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val isOffline = (ModeManager.mode == ModeManager.Mode.OFFLINE)
-
-        // ambil hasil dari CameraActivity
-        rightUri   = intent.getStringExtra("RIGHT_EYE_URI") ?: ""
-        leftUri    = intent.getStringExtra("LEFT_EYE_URI") ?: ""
-        rightLabel = intent.getStringExtra("RIGHT_LABEL") ?: "Unknown"
+        // Ambil extras dari CameraActivity
+        rightUri   = intent.getStringExtra("RIGHT_EYE_URI")
+        leftUri    = intent.getStringExtra("LEFT_EYE_URI")
+        rightLabel = intent.getStringExtra("RIGHT_LABEL")
         rightScore = intent.getFloatExtra("RIGHT_SCORE", -1f)
-        leftLabel  = intent.getStringExtra("LEFT_LABEL") ?: "Unknown"
+        leftLabel  = intent.getStringExtra("LEFT_LABEL")
         leftScore  = intent.getFloatExtra("LEFT_SCORE", -1f)
 
-        // OFFLINE → langsung ke hasil
-        if (isOffline) {
+        // Mode offline seharusnya tidak lewat sini (CameraActivity langsung ke HasilActivity),
+        // tapi kalaupun lewat, tetap aman:
+        if (ModeManager.mode == ModeManager.Mode.OFFLINE) {
             goToHasilOffline()
             return
         }
 
-        // ONLINE → render form
+        // Minimal 1 mata harus ada untuk online flow
+        if (rightUri == null && leftUri == null) {
+            Toast.makeText(this, "Minimal pilih/ambil 1 mata terlebih dahulu.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+        // === ONLINE mode → render UI ===
         setContentView(R.layout.activity_data_pasien)
 
         etNama = findViewById(R.id.PasienNama)
@@ -68,10 +74,12 @@ class DataPasienActivity : AppCompatActivity() {
         tilTanggal = findViewById(R.id.tilPasienTanggal)
         btnSimpan = findViewById(R.id.button_simpan)
 
+        // === Picker Tanggal ===
         etTanggal.setOnClickListener { showTanggalPicker(etTanggal, tilTanggal) }
         tilTanggal.setEndIconOnClickListener { etTanggal.performClick() }
         etTanggal.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) etTanggal.performClick() }
 
+        // === Tombol Simpan ===
         btnSimpan.setOnClickListener {
             val nama = etNama.text.toString().trim()
             val nik = etNik.text.toString().trim()
@@ -86,16 +94,21 @@ class DataPasienActivity : AppCompatActivity() {
         }
     }
 
+    // === Fungsi menampilkan date picker ===
     private fun showTanggalPicker(target: TextInputEditText, til: TextInputLayout?) {
         val start1900 = Calendar.getInstance().apply {
-            set(1900, Calendar.JANUARY, 1, 0, 0, 0); set(Calendar.MILLISECOND, 0)
+            set(1900, Calendar.JANUARY, 1, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         }.timeInMillis
+
         val constraints = CalendarConstraints.Builder()
             .setValidator(DateValidatorPointBackward.now())
             .setStart(start1900)
             .setEnd(System.currentTimeMillis())
             .build()
+
         val defaultSelection = parseDateToMillis(target.text?.toString())
+
         val picker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Pilih tanggal lahir")
             .setCalendarConstraints(constraints)
@@ -107,13 +120,20 @@ class DataPasienActivity : AppCompatActivity() {
             target.setText(dateStr)
             til?.error = null
         }
+
         picker.show(supportFragmentManager, "tgl_picker")
     }
 
-    private fun parseDateToMillis(text: String?): Long? =
-        try { if (text.isNullOrBlank()) null else sdfDisplay.parse(text)?.time } catch (_: ParseException) { null }
+    private fun parseDateToMillis(text: String?): Long? {
+        if (text.isNullOrBlank()) return null
+        return try {
+            sdfDisplay.parse(text)?.time
+        } catch (_: ParseException) {
+            null
+        }
+    }
 
-    // === Simpan ke Storage + Firestore, lalu ke Hasil (ONLINE) ===
+    // === Simpan ke Firebase (online mode) ===
     private suspend fun saveToFirebase(nama: String, nik: String, tanggal: String) = withContext(Dispatchers.IO) {
         try {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
@@ -122,83 +142,117 @@ class DataPasienActivity : AppCompatActivity() {
 
             val pasienId = "${nama.replace(" ", "_")}_${System.currentTimeMillis()}"
             val baseRef = storage.child("rb_images/$uid/$pasienId")
-            val rightRef = baseRef.child("right_eye.jpg")
-            val leftRef  = baseRef.child("left_eye.jpg")
 
-            val rightTask = rightRef.putFile(Uri.parse(rightUri)).continueWithTask { rightRef.downloadUrl }
-            val leftTask  = leftRef.putFile(Uri.parse(leftUri)).continueWithTask { leftRef.downloadUrl }
+            // Upload hanya yang ada
+            var rightUrl: String? = null
+            var leftUrl: String? = null
 
-            val rightUrl = rightTask.await().toString()
-            val leftUrl  = leftTask.await().toString()
+            if (!rightUri.isNullOrEmpty()) {
+                val rightRef = baseRef.child("right_eye.jpg")
+                rightUrl = rightRef.putFile(Uri.parse(rightUri))
+                    .continueWithTask { rightRef.downloadUrl }
+                    .await()
+                    .toString()
+            }
+            if (!leftUri.isNullOrEmpty()) {
+                val leftRef  = baseRef.child("left_eye.jpg")
+                leftUrl = leftRef.putFile(Uri.parse(leftUri))
+                    .continueWithTask { leftRef.downloadUrl }
+                    .await()
+                    .toString()
+            }
 
-            val doc = hashMapOf(
-                "nama" to nama, "nik" to nik, "tanggal" to tanggal,
-                "hasil_kanan" to rightLabel, "hasil_kiri" to leftLabel,
-                "confidence_kanan" to rightScore, "confidence_kiri" to leftScore,
-                "foto_kanan_url" to rightUrl, "foto_kiri_url" to leftUrl,
+            // Build dokumen hanya dengan field yang ada
+            val doc = mutableMapOf<String, Any?>(
+                "nama" to nama,
+                "nik" to nik,
+                "tanggal" to tanggal,
                 "created_at" to System.currentTimeMillis()
             )
+
+            // Label & score yang tersedia
+            rightLabel?.let { doc["hasil_kanan"] = it }
+            if (rightScore >= 0f) doc["confidence_kanan"] = rightScore
+            leftLabel?.let { doc["hasil_kiri"] = it }
+            if (leftScore >= 0f) doc["confidence_kiri"] = leftScore
+
+            // URL yang tersedia
+            rightUrl?.let { doc["foto_kanan_url"] = it }
+            leftUrl?.let  { doc["foto_kiri_url"]  = it }
+
             db.collection("users").document(uid)
                 .collection("pasien").document(pasienId)
                 .set(doc).await()
 
+            // Hitung diagnosis buat tampilan hasil
+            val diagnosis = buildDiagnosis(rightLabel, leftLabel)
+
             withContext(Dispatchers.Main) {
-                goToHasilOnline(nama, nik, tanggal, rightUrl, leftUrl)
+                goToHasilOnline(nama, nik, tanggal, rightUrl, leftUrl, diagnosis)
             }
 
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@DataPasienActivity, "Gagal simpan: ${e.message}", Toast.LENGTH_LONG).show()
-                goToHasilOnline(nama, nik, tanggal, null, null)
+                val diagnosis = buildDiagnosis(rightLabel, leftLabel)
+                goToHasilOnline(nama, nik, tanggal, null, null, diagnosis)
             }
         }
     }
 
-    private fun goToHasilOnline(nama: String, nik: String, tanggal: String, rightUrl: String?, leftUrl: String?) {
-        val diagnosis = if (rightLabel.equals("RB", true) || leftLabel.equals("RB", true))
-            "Terindikasi retinoblastoma (cek ke dokter)."
-        else "Tidak terindikasi retinoblastoma."
-
+    private fun goToHasilOnline(
+        nama: String,
+        nik: String,
+        tanggal: String,
+        rightUrl: String?,
+        leftUrl: String?,
+        diagnosis: String
+    ) {
         val intent = Intent(this, HasilActivity::class.java).apply {
             putExtra("EXTRA_NAMA", nama)
             putExtra("EXTRA_NIK", nik)
             putExtra("EXTRA_TANGGAL", tanggal)
 
             putExtra("RIGHT_EYE_URI", rightUri)
-            putExtra("LEFT_EYE_URI",  leftUri)
-            putExtra("RIGHT_LABEL",    rightLabel)
-            putExtra("RIGHT_SCORE",    rightScore)
-            putExtra("LEFT_LABEL",     leftLabel)
-            putExtra("LEFT_SCORE",     leftScore)
-            putExtra("DIAGNOSIS",      diagnosis)
+            putExtra("LEFT_EYE_URI", leftUri)
+            putExtra("RIGHT_LABEL", rightLabel)
+            putExtra("RIGHT_SCORE", rightScore)
+            putExtra("LEFT_LABEL", leftLabel)
+            putExtra("LEFT_SCORE", leftScore)
 
             putExtra("RIGHT_URL", rightUrl)
-            putExtra("LEFT_URL",  leftUrl)
+            putExtra("LEFT_URL", leftUrl)
+
+            putExtra("DIAGNOSIS", diagnosis)
         }
         startActivity(intent)
         finish()
     }
 
     private fun goToHasilOffline() {
-        val diagnosis = if (rightLabel.equals("RB", true) || leftLabel.equals("RB", true))
-            "Terindikasi retinoblastoma (cek ke dokter)."
-        else "Tidak terindikasi retinoblastoma."
-
+        val diagnosis = buildDiagnosis(rightLabel, leftLabel)
         val intent = Intent(this, HasilActivity::class.java).apply {
             putExtra("EXTRA_NAMA", "Mode Offline")
             putExtra("EXTRA_NIK", "")
             putExtra("EXTRA_TANGGAL", "")
 
             putExtra("RIGHT_EYE_URI", rightUri)
-            putExtra("LEFT_EYE_URI",  leftUri)
-            putExtra("RIGHT_LABEL",    rightLabel)
-            putExtra("RIGHT_SCORE",    rightScore)
-            putExtra("LEFT_LABEL",     leftLabel)
-            putExtra("LEFT_SCORE",     leftScore)
-            putExtra("DIAGNOSIS",      diagnosis)
+            putExtra("LEFT_EYE_URI", leftUri)
+            putExtra("RIGHT_LABEL", rightLabel)
+            putExtra("RIGHT_SCORE", rightScore)
+            putExtra("LEFT_LABEL", leftLabel)
+            putExtra("LEFT_SCORE", leftScore)
+
+            putExtra("DIAGNOSIS", diagnosis)
         }
         startActivity(intent)
         finish()
+    }
+
+    private fun buildDiagnosis(rLabel: String?, lLabel: String?): String {
+        fun pos(s: String?) = s?.equals("RB", true) == true || (s?.contains("retinoblastoma", true) == true)
+        val hasRB = pos(rLabel) || pos(lLabel)
+        return if (hasRB) "Terindikasi retinoblastoma (cek ke dokter)." else "Tidak terindikasi retinoblastoma."
     }
 
     override fun onDestroy() {

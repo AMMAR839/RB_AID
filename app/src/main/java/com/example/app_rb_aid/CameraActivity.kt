@@ -32,7 +32,7 @@ import org.pytorch.Module
 import org.pytorch.Tensor
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
+import java.io.InputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.max
@@ -47,6 +47,9 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var overlayView: CameraOverlayView
 
     private lateinit var captureFab: FloatingActionButton
+    private lateinit var pickFab: FloatingActionButton      // << NEW
+    private lateinit var skipFab: FloatingActionButton      // << NEW
+
     private lateinit var capturedImageView: ImageView
     private lateinit var reviewActions: LinearLayout
     private lateinit var redoFab: FloatingActionButton
@@ -69,7 +72,7 @@ class CameraActivity : AppCompatActivity() {
     private val cloudUrl = "https://tscnn-api-468474828586.asia-southeast2.run.app/predict"
     private val http by lazy { OkHttpClient() }
 
-    // PyTorch model lokal (.pt). Taruh di assets/models/…
+    // PyTorch model lokal (.pt) – taruh di assets/models/
     private var localModel: Module? = null
     private val inputSize = 64
     private val MEAN = floatArrayOf(2.3147659e-05f, -5.0520233e-05f, 1.3798560e-05f)
@@ -78,7 +81,7 @@ class CameraActivity : AppCompatActivity() {
     // ---------- Coroutines ----------
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    // ---------- Permission ----------
+    // ---------- Permissions ----------
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
             if (ok) startCamera() else {
@@ -87,11 +90,18 @@ class CameraActivity : AppCompatActivity() {
             }
         }
 
+    // ---------- Gallery picker ----------
+    private val galleryPicker =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri == null) return@registerForActivityResult
+            // Masuk review pakai gambar dari galeri
+            enterReview(uri)
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        // Mode (dari ModeManager globalmu)
         isOffline = (ModeManager.mode == ModeManager.Mode.OFFLINE)
 
         // Bind views
@@ -99,7 +109,10 @@ class CameraActivity : AppCompatActivity() {
         instructionText = findViewById(R.id.instructionText)
         flashOverlay = findViewById(R.id.flashOverlay)
         overlayView = findViewById(R.id.CameraOverlayView)
+
         captureFab = findViewById(R.id.captureFab)
+        pickFab    = findViewById(R.id.pickFab)     // << bind
+        skipFab    = findViewById(R.id.skipFab)     // << bind
 
         capturedImageView = findViewById(R.id.capturedImageView)
         reviewActions = findViewById(R.id.reviewActions)
@@ -109,10 +122,10 @@ class CameraActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
         instructionText.text = "Ambil foto mata kanan"
 
-        // Muat model lokal jika mode offline (atau fallback)
+        // Load model lokal kalau offline (buat fallback juga kalau cloud gagal)
         if (isOffline) {
             try {
-                val path = assetFilePath("models/cnn2_precise_best.pt") // ubah jika namanya beda
+                val path = assetFilePath("cnn2_precise_best.pt")
                 localModel = Module.load(path)
                 Log.d("CameraActivity", "Model lokal PyTorch dimuat.")
             } catch (e: Exception) {
@@ -121,10 +134,9 @@ class CameraActivity : AppCompatActivity() {
             }
         }
 
-        // Permission
+        // Permission kamera
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
+            == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         } else {
             permissionLauncher.launch(Manifest.permission.CAMERA)
@@ -132,6 +144,16 @@ class CameraActivity : AppCompatActivity() {
 
         // Actions
         captureFab.setOnClickListener { takePhoto() }
+
+        pickFab.setOnClickListener {
+            // pilih dari galeri untuk mata yang sedang aktif
+            galleryPicker.launch("image/*")
+        }
+
+        skipFab.setOnClickListener {
+            onSkipCurrentEye()
+        }
+
         redoFab.setOnClickListener { exitReview(deleteFile = true) }
         confirmFab.setOnClickListener { confirmPhotoAndProceed() }
     }
@@ -159,7 +181,7 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         if (isReviewMode) return
-        // Cara utama: snapshot preview + crop ROI dari overlay
+        // Snapshot preview + crop ROI
         captureRoiFromPreview()?.let { roiFile ->
             showFlash()
             lastPhotoFile = roiFile
@@ -167,7 +189,7 @@ class CameraActivity : AppCompatActivity() {
             return
         }
 
-        // Fallback: gunakan ImageCapture bila bitmap preview belum siap
+        // Fallback: ImageCapture
         val imageCapture = imageCapture ?: return
         val dir = externalCacheDir ?: cacheDir
         val photoFile = File(dir, "${System.currentTimeMillis()}.jpg")
@@ -189,7 +211,7 @@ class CameraActivity : AppCompatActivity() {
         )
     }
 
-    /** Tangkap bitmap dari PreviewView, crop sesuai kotak overlay, simpan JPG di cache. */
+    /** Ambil bitmap dari PreviewView, crop sesuai kotak overlay, simpan JPG. */
     private fun captureRoiFromPreview(): File? {
         val bmp: Bitmap = previewView.bitmap ?: return null
         val box = overlayView.getBoxRect()
@@ -204,8 +226,7 @@ class CameraActivity : AppCompatActivity() {
         if (cw < 4 || ch < 4) return null
 
         val cropped = Bitmap.createBitmap(bmp, L.toInt(), T.toInt(), cw, ch)
-        val dir = externalCacheDir ?: cacheDir
-        val out = File(dir, "roi_${System.currentTimeMillis()}.jpg")
+        val out = File((externalCacheDir ?: cacheDir), "roi_${System.currentTimeMillis()}.jpg")
         FileOutputStream(out).use { cropped.compress(Bitmap.CompressFormat.JPEG, 95, it) }
         return out
     }
@@ -219,9 +240,12 @@ class CameraActivity : AppCompatActivity() {
         capturedImageView.adjustViewBounds = true
         capturedImageView.setImageURI(uri)
 
+        // SEMBUNYIKAN tombol kamera/galeri/skip saat preview
         capturedImageView.visibility = View.VISIBLE
         reviewActions.visibility = View.VISIBLE
         captureFab.visibility = View.GONE
+        pickFab.visibility = View.GONE           // << hide gallery
+        skipFab.visibility = View.GONE           // << hide skip
         overlayView.visibility = View.GONE
 
         instructionText.text = if (currentEye == "RIGHT")
@@ -236,7 +260,11 @@ class CameraActivity : AppCompatActivity() {
         capturedImageView.setImageDrawable(null)
         capturedImageView.visibility = View.GONE
         reviewActions.visibility = View.GONE
+
+        // TAMPILKAN lagi tombol kamera/galeri/skip
         captureFab.visibility = View.VISIBLE
+        pickFab.visibility = View.VISIBLE        // << show gallery
+        skipFab.visibility = View.VISIBLE        // << show skip
         overlayView.visibility = View.VISIBLE
 
         instructionText.text = if (currentEye == "RIGHT")
@@ -256,32 +284,49 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
-    // ---------------- Setelah dua foto siap ----------------
+    private fun onSkipCurrentEye() {
+        // Tandai mata saat ini sebagai SKIP (null)
+        if (currentEye == "RIGHT") {
+            rightEyeUri = null
+            currentEye = "LEFT"
+            instructionText.text = "Ambil foto mata kiri"
+        } else {
+            leftEyeUri = null
+            // Setelah mata kiri diputuskan (foto/galeri/skip), lanjut
+            onBothPhotosReady()
+        }
+    }
+
+    // ---------------- Setelah dua mata diputuskan ----------------
     private fun onBothPhotosReady() {
-        val r = rightEyeUri ?: return
-        val l = leftEyeUri ?: return
+        // Minimal satu mata harus ada
+        val r = rightEyeUri
+        val l = leftEyeUri
+        if (r == null && l == null) {
+            Toast.makeText(this, "Minimal ambil/pilih 1 mata.", Toast.LENGTH_LONG).show()
+            return
+        }
 
         scope.launch {
-            val (rawRLabel, rScore) = runInference(r)
-            val (rawLLabel, lScore) = runInference(l)
+            val (rawRLabel, rScore) = if (r != null) runInference(r) else "Unknown" to -1f
+            val (rawLLabel, lScore) = if (l != null) runInference(l) else "Unknown" to -1f
 
             val rLabel = normalizeLabel(rawRLabel)
             val lLabel = normalizeLabel(rawLLabel)
 
             val diagnosis = if (isPositive(rLabel) || isPositive(lLabel))
-                "Terindikasi retinoblastoma (cek ke dokter)."
-            else
+                "Terindikasi retinoblastoma (cek ke dokter)." else
                 "Tidak terindikasi retinoblastoma."
 
             if (isOffline) {
-                // OFFLINE → langsung HasilActivity (tanpa form)
+                // OFFLINE → langsung ke HasilActivity
                 val go = Intent(this@CameraActivity, HasilActivity::class.java).apply {
                     putExtra("EXTRA_NAMA", "Mode Offline")
                     putExtra("EXTRA_NIK", "")
                     putExtra("EXTRA_TANGGAL", "")
 
-                    putExtra("RIGHT_EYE_URI", r.toString())
-                    putExtra("LEFT_EYE_URI",  l.toString())
+                    putExtra("RIGHT_EYE_URI", r?.toString())
+                    putExtra("LEFT_EYE_URI",  l?.toString())
 
                     putExtra("RIGHT_LABEL", rLabel)
                     putExtra("RIGHT_SCORE", rScore)
@@ -293,11 +338,10 @@ class CameraActivity : AppCompatActivity() {
                 startActivity(go)
                 finish()
             } else {
-                // ONLINE → bawa ke DataPasienActivity untuk isi data & simpan Firebase
+                // ONLINE → lanjut isi data
                 val go = Intent(this@CameraActivity, DataPasienActivity::class.java).apply {
-                    putExtra("RIGHT_EYE_URI", r.toString())
-                    putExtra("LEFT_EYE_URI",  l.toString())
-
+                    putExtra("RIGHT_EYE_URI", r?.toString())
+                    putExtra("LEFT_EYE_URI",  l?.toString())
                     putExtra("RIGHT_LABEL", rLabel)
                     putExtra("RIGHT_SCORE", rScore)
                     putExtra("LEFT_LABEL",  lLabel)
@@ -311,10 +355,10 @@ class CameraActivity : AppCompatActivity() {
 
     // ---------------- Inference (online → fallback offline) ----------------
     private suspend fun runInference(uri: Uri): Pair<String, Float> = withContext(Dispatchers.IO) {
-        // ONLINE lebih dulu jika mode online
+        // ONLINE lebih dulu kalau mode online
         if (!isOffline) {
             try {
-                val f = File(uri.path!!)
+                val f = uriToTempFile(uri) // aman untuk content://
                 val body = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("file", f.name, f.asRequestBody("image/jpeg".toMediaType()))
@@ -337,7 +381,7 @@ class CameraActivity : AppCompatActivity() {
         // OFFLINE (PyTorch)
         localModel?.let { model ->
             try {
-                val bmp = BitmapFactory.decodeFile(uri.path!!)
+                val bmp = decodeBitmap(uri) // aman untuk content://
                 val scaled = Bitmap.createScaledBitmap(bmp, inputSize, inputSize, true)
                 val input = bitmapToNormalizedCHW(scaled, MEAN, STD)
                 val output = model.forward(IValue.from(input)).toTensor()
@@ -353,16 +397,30 @@ class CameraActivity : AppCompatActivity() {
                 Log.e("OfflineInference", "Error offline: ${e.message}", e)
             }
         }
-        // Bila semuanya gagal
         return@withContext "Unknown" to -1f
     }
 
-    // --- Preprocess untuk PyTorch: CHW, normalisasi ---
-    private fun bitmapToNormalizedCHW(
-        bmp: Bitmap,
-        mean: FloatArray,
-        std: FloatArray
-    ): Tensor {
+    // --- Helpers aman untuk content:// ---
+    private fun uriToTempFile(uri: Uri): File {
+        val input: InputStream = contentResolver.openInputStream(uri)
+            ?: throw IllegalStateException("Tidak bisa buka stream dari URI")
+        val outFile = File.createTempFile("picked_", ".jpg", cacheDir)
+        outFile.outputStream().use { out -> input.copyTo(out) }
+        return outFile
+    }
+
+    private fun decodeBitmap(uri: Uri): Bitmap {
+        return if (uri.scheme.equals("content", true)) {
+            contentResolver.openInputStream(uri).use { ins ->
+                BitmapFactory.decodeStream(ins!!)
+            }
+        } else {
+            BitmapFactory.decodeFile(uri.path!!)
+        }
+    }
+
+    // --- preprocess PyTorch (CHW) ---
+    private fun bitmapToNormalizedCHW(bmp: Bitmap, mean: FloatArray, std: FloatArray): Tensor {
         val w = bmp.width
         val h = bmp.height
         val pixels = IntArray(w * h)
@@ -390,7 +448,6 @@ class CameraActivity : AppCompatActivity() {
         return Tensor.fromBlob(arr, longArrayOf(1, 3, h.toLong(), w.toLong()))
     }
 
-    // ---------------- Utils & helpers ----------------
     private fun normalizeLabel(raw: String): String = when {
         raw.equals("RB", true) -> "RB"
         raw.contains("retinoblastoma", true) -> "RB"
