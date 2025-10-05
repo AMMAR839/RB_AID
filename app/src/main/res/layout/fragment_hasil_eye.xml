@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:gravity="center_horizontal">
+
+    <!-- Judul mata -->
+    <TextView
+        android:id="@+id/tvEyeTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mata Kanan"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:textSize="14sp"
+        android:layout_marginBottom="6dp"/>
+
+    <!-- Gambar diberi weight supaya mengambil sisa ruang -->
+    <ImageView
+        android:id="@+id/ivEye"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop" />
+
+    <!-- Sedikit jarak -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="8dp"/>
+
+    <!-- Hasil label -->
+    <TextView
+        android:id="@+id/tvLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hasil: -"
+        android:textAlignment="center"
+        android:textSize="13sp"/>
+
+    <!-- Skor -->
+    <TextView
+        android:id="@+id/tvScore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Skor: -"
+        android:textAlignment="center"
+        android:textSize="12sp"
+        android:layout_marginTop="2dp"/>
+
+    <!-- Spacer kecil biar tidak mepet bawah -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="6dp"/>
+</LinearLayout>

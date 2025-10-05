@@ -10,3 +10,4 @@ data class Hospital(
     val distance: Double = 0.0    // tambahan
 )
 
+
