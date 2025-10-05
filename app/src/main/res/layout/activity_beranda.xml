@@ -8,144 +8,157 @@
     android:background="@drawable/beranda"
     tools:context=".BerandaActivity">
 
-    <!-- ======= BERANDA ASLI KAMU ======= -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutBeranda"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <!-- ==================== Background ==================== -->
+    <ImageView
+        android:id="@+id/backgroundImageView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/beranda"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <ImageView
-            android:id="@+id/backgroundImageView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:contentDescription="@string/todo23"
-            android:scaleType="centerCrop"
-            android:src="@drawable/beranda"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+    <!-- ==================== Text Informasi ==================== -->
+    <TextView
+        android:id="@+id/infoTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="80dp"
+        android:lineSpacingExtra="2dp"
+        android:text="@string/there_are_8_000_new_cases_of_retinoblastoma_every_year"
+        android:textColor="@android:color/white"
+        android:textSize="45sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="top">
+    <!-- ==================== Mulai Cek Sekarang ==================== -->
+    <TextView
+        android:id="@+id/startCheckTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/mulai_cek_sekarang"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@id/layout_setting_tutorial"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-            <TextView
-                android:id="@+id/infoTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="80dp"
-                android:lineSpacingExtra="2dp"
-                android:text="@string/there_are_8_000_new_cases_of_retinoblastoma_every_year"
-                android:textColor="@android:color/white"
-                android:textSize="45sp" />
-        </RelativeLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <TextView
-                android:layout_gravity="center_horizontal"
-                android:id="@+id/startCheckTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="@string/mulai_cek_sekarang"
-                android:textColor="@android:color/white"
-                android:textSize="30sp" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center">
-                <ImageButton
-                    android:id="@+id/setting_button"
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
-                    android:background="@null"
-                    android:src="@drawable/setting_icon"
-                    android:padding="8dp"
-                    android:layout_margin="5dp"/>
-
-                <Button
-                    android:layout_gravity="center_horizontal"
-                    android:id="@+id/tutorialButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    android:backgroundTint="@android:color/holo_orange_light"
-                    android:paddingVertical="7dp"
-                    android:paddingHorizontal="50dp"
-                    android:text="@string/tutorial"
-                    android:textSize="25sp"
-                    android:textColor="@android:color/white" />
-            </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:layout_gravity="center_horizontal"
-                android:id="@+id/cameraButton"
-                android:layout_width="275dp"
-                android:layout_height="55dp"
-                android:layout_marginBottom="10dp"
-                android:textColor="@android:color/black"
-                app:iconTint="@color/white"
-                android:backgroundTint="@color/transparent"
-                app:strokeWidth="2sp"
-                app:strokeColor="@color/white"
-                app:icon="@drawable/camera_svgrepo_com"
-                app:iconSize="40dp"
-                app:iconPadding="0dp"
-                app:iconGravity="textStart" />
-
-            <TextView
-                android:layout_gravity="center_horizontal"
-                android:id="@+id/btn_Keluar"
-                android:clickable="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
-                android:text="@string/Keluar"
-                android:textColor="@android:color/holo_blue_light"
-                android:textSize="16sp" />
-        </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-    <!-- ======= LAYOUT TUTORIAL (di atas) ======= -->
+    <!-- ==================== Setting dan Tutorial ==================== -->
     <LinearLayout
-        android:id="@+id/layoutTutorial"
-        android:visibility="gone"
-        android:orientation="vertical"
-        android:background="#CC000000"
+        android:id="@+id/layout_setting_tutorial"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@id/cameraButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/tutorialPager"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:padding="24dp"/>
+        <!-- Tombol Setting (kiri) -->
+        <ImageButton
+            android:id="@+id/setting_button"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@null"
+            android:src="@drawable/setting_icon"
+            android:padding="8dp"
+            android:layout_marginEnd="16dp" />
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tutorialIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"/>
-
+        <!-- Tombol Tutorial (kanan) -->
         <Button
-            android:id="@+id/nextButton"
+            android:id="@+id/tutorialButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Lanjut"
-            android:layout_marginBottom="32dp"/>
+            android:backgroundTint="@android:color/holo_orange_light"
+            android:paddingHorizontal="50dp"
+            android:paddingVertical="7dp"
+            android:text="@string/tutorial"
+            android:textColor="@android:color/white"
+            android:textSize="25sp" />
+
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/cameraButton"
+        android:layout_width="275dp"
+        android:layout_height="55dp"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="@color/transparent"
+        android:textColor="@android:color/black"
+        app:strokeWidth="2sp"
+        app:strokeColor="@color/white"
+        app:icon="@drawable/camera_svgrepo_com"
+        app:iconSize="40dp"
+        app:iconPadding="0dp"
+        app:iconGravity="textStart"
+        app:layout_constraintBottom_toTopOf="@id/btn_Keluar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- ==================== Tombol Keluar ==================== -->
+    <TextView
+        android:id="@+id/btn_Keluar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="@string/Keluar"
+        android:textColor="@android:color/holo_blue_light"
+        android:textSize="16sp"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- ==================== Overlay untuk Tutorial Step 3 ==================== -->
+    <!-- Bagian Atas -->
+    <ImageView
+        android:id="@+id/dark_overlay_top"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:alpha="0.7"
+        android:background="#000000"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/cameraButton" />
+
+    <!-- Bagian Bawah -->
+    <ImageView
+        android:id="@+id/dark_overlay_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:alpha="0.7"
+        android:background="#000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_Keluar" />
+
+    <!-- ==================== Tooltip di Tengah ==================== -->
+    <LinearLayout
+        android:id="@+id/tooltipLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/kotak_tutor"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="5dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/cameraButton"
+        app:layout_constraintStart_toStartOf="@id/cameraButton"
+        app:layout_constraintEnd_toEndOf="@id/cameraButton">
+
+        <TextView
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="Lalu tekan pada bagian ini untuk memulai deteksi"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:gravity="center"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

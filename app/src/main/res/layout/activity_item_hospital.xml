@@ -1,28 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="12dp"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
 
-    <TextView
-        android:id="@+id/textView_hospital_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="RS XXXXXXXXX"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:ignore="MissingConstraints">
+            <TextView
+                android:id="@+id/textView_hospital_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RS XXXXXXXXX"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/textView_distance"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="XX KM"
-        android:textColor="@android:color/darker_gray"
-        android:textSize="12sp" />
+            <TextView
+                android:id="@+id/textView_distance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="XX KM"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/button_send_email"
+            android:layout_width="37dp"
+            android:layout_height="37dp"
+            android:width="10dp"
+            android:height="20dp"
+            android:background="@drawable/send_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:ignore="MissingConstraints" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>

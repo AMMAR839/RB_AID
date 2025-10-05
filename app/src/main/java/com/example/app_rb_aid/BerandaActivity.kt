@@ -16,13 +16,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.app_rb_aid.databinding.TutorialmainBinding
+import com.example.app_rb_aid.databinding.ActivityBerandaBinding
 import com.google.firebase.auth.FirebaseAuth
 import androidx.core.view.isVisible
 
+
 class BerandaActivity : AppCompatActivity() {
 
-    private lateinit var binding: TutorialmainBinding
+    private lateinit var binding: ActivityBerandaBinding
     private lateinit var auth: FirebaseAuth
 
     private val CAMERA_REQUEST_CODE = 100
@@ -33,7 +34,7 @@ class BerandaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = TutorialmainBinding.inflate(layoutInflater)
+        binding = ActivityBerandaBinding.inflate(layoutInflater)
         setContentView(binding.root) // Gunakan layout maintutorial.xml
 
 
@@ -85,6 +86,11 @@ class BerandaActivity : AppCompatActivity() {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             Toast.makeText(this, "Berhasil keluar", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.settingButton.setOnClickListener {
+            val intent = Intent(this, GantiNamaActivity::class.java)
+            startActivity(intent)
         }
     }
 

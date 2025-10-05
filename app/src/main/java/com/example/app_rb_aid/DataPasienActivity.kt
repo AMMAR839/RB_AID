@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
+import android.widget.ImageView
 
 class DataPasienActivity : AppCompatActivity() {
 
@@ -28,7 +29,7 @@ class DataPasienActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_data_pasien)
-
+        findViewById<ImageView>(R.id.back_button_data_pasien).setOnClickListener { finish() }
         val etNama = findViewById<TextInputEditText>(R.id.PasienNama)
         val etNik  = findViewById<TextInputEditText>(R.id.PasienNIK)
         val etTgl  = findViewById<TextInputEditText>(R.id.PasienTanggal)

@@ -34,14 +34,13 @@ android {
     kotlinOptions { jvmTarget = "11" }
     buildFeatures { viewBinding = true }
 
-    androidResources {
-        // Kotlin DSL: pakai +=
-//        aaptOptions { noCompress("tflite") }
-        noCompress += "tflite"
-    }
+    // Model .tflite jangan di-compress
+    androidResources { noCompress += "tflite" }
+
     sourceSets {
         getByName("main") {
             assets {
+                // pakai path yang kamu gunakan
                 srcDirs("src\\main\\assets", "src\\main\\assets\\models")
             }
         }
@@ -49,9 +48,7 @@ android {
 }
 
 dependencies {
-    val camerax_version = "1.3.4"
-
-    // --- AndroidX dasar ---
+    // ---------- AndroidX dasar ----------
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity)
@@ -59,50 +56,48 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // --- Material (pilih satu sumber; pakai versi eksplisit ini) ---
-    implementation("com.google.android.material:material:1.12.0")
-    // (hapus libs.material agar tidak dobel)
+    // Material & Splashscreen
+    implementation(libs.material)
+    implementation(libs.androidx.core.splashscreen)
 
-    // --- Splashscreen (stabil) ---
-    implementation("androidx.core:core-splashscreen:1.0.1")
+    // ---------- CameraX ----------
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 
-    // --- CameraX ---
-    implementation("androidx.camera:camera-core:$camerax_version")
-    implementation("androidx.camera:camera-camera2:$camerax_version")
-    implementation("androidx.camera:camera-lifecycle:$camerax_version")
-    implementation("androidx.camera:camera-view:$camerax_version")
+    // ---------- TensorFlow Lite (opsional) ----------
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.task.vision)
 
-    // --- TensorFlow Lite (JANGAN dobel) ---
-    implementation("org.tensorflow:tensorflow-lite:2.12.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-    // Optional (hapus kalau tidak dipakai):
-    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
+    // ---------- Coroutines & Lifecycle ----------
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // --- Coroutines & Lifecycle ---
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    // ---------- Firebase (pakai BOM) ----------
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.ml.modeldownloader)
 
-    // --- Firebase (pakai BOM agar versi konsisten) ---
-    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-ml-modeldownloader")
+    // Firestore & Realtime Database (NON-KTX, sesuai kebutuhanmu)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.database)
 
-    // --- Google Sign-In klasik (yang dipakai di LoginActivity) ---
-    implementation("com.google.android.gms:play-services-auth:21.4.0")
-    implementation("com.google.android.gms:play-services-base:18.4.0")
+    // ---------- Google Sign-In & Location ----------
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.location)
+    // Tidak perlu play-services-base (transitif)
 
-    // --- Test ---
+    // ---------- Credentials / Google Identity (opsional) ----------
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+
+    // ---------- Test ----------
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-    // (Dihapus supaya tidak konflik/duplikat)
-    // implementation(libs.material)
-    // implementation(libs.firebase.auth)
-    // implementation("com.google.firebase:firebase-auth:24.0.1")
-    // implementation(libs.androidx.credentials)
-    // implementation(libs.androidx.credentials.play.services.auth)
-    // implementation(libs.googleid)
 }
