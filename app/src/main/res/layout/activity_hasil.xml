@@ -72,6 +72,14 @@
                 android:textAlignment="center"
                 android:textSize="14sp" />
 
+            <TextView
+                android:id="@+id/tvTanggal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="20 Juli 2000"
+                android:textAlignment="center"
+                android:textSize="14sp" />
+
             <ImageView
                 android:id="@+id/ivMataKanan"
                 android:layout_width="180dp"
@@ -141,6 +149,7 @@
             android:scaleType="centerInside" />
 
         <TextView
+            android:id="@+id/txt_tekansimbol"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/tombol_dokter"
