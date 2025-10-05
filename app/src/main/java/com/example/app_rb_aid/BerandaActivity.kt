@@ -30,6 +30,10 @@ class BerandaActivity : AppCompatActivity() {
     private val CAMERA_PERMISSION_CODE = 101
 
     private var fromTutorial = false // Flag untuk cek dari tutorial
+    private fun applyModeUi() {
+        val isOffline = (ModeManager.mode == ModeManager.Mode.OFFLINE)
+        binding.settingButton.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +41,7 @@ class BerandaActivity : AppCompatActivity() {
         binding = ActivityBerandaBinding.inflate(layoutInflater)
         setContentView(binding.root) // Gunakan layout maintutorial.xml
 
-
+        applyModeUi()
         auth = FirebaseAuth.getInstance()
 
 
@@ -121,7 +125,6 @@ class BerandaActivity : AppCompatActivity() {
 
         animatorSet.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                // Setelah animasi selesai, sembunyikan overlay
                 binding.darkOverlayTop.visibility = View.GONE
                 binding.darkOverlayBottom.visibility = View.GONE
                 binding.tooltipLayout.visibility = View.GONE

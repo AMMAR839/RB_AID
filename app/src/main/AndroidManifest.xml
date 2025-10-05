@@ -43,5 +43,8 @@
         <activity android:name=".DataPasienActivity" android:exported="true" />
         <activity android:name=".HasilActivity" android:exported="true" />
         <activity android:name=".HospitalListActivity" android:exported="true" />
+        <activity android:name=".GantiNamaActivity" android:exported="true" />
+        <activity android:name=".GantiPassActivity" android:exported="true" />
+
     </application>
 </manifest>

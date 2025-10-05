@@ -25,14 +25,14 @@ class TutorialActivity : AppCompatActivity() {
         nextButton = findViewById(R.id.nextButton)
 
         // Step awal
-        showStepLayout(R.layout.tutorial1)
+        showStepLayout(R.layout.tutorial_1)
 
         nextButton.setOnClickListener {
             when (currentStep) {
                 1 -> {
                     currentStep = 2
                     // animasi khusus saat NEXT pertama kali dipencet
-                    animateToLayout(R.layout.tutorial4)
+                    animateToLayout(R.layout.tutorial_2)
                 }
                 2 -> {
                     val intent = Intent(this, BerandaActivity::class.java)
