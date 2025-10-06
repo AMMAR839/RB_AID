@@ -80,6 +80,7 @@ class DataPasienActivity : AppCompatActivity() {
         etTanggal.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) etTanggal.performClick() }
 
         // === Tombol Simpan ===
+        // di onCreate -> btnSimpan.setOnClickListener
         btnSimpan.setOnClickListener {
             val nama = etNama.text.toString().trim()
             val nik = etNik.text.toString().trim()
@@ -90,8 +91,26 @@ class DataPasienActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            scope.launch { saveToFirebase(nama, nik, tanggal) }
+            // Langsung ke HasilActivity (tanpa nunggu upload)
+            val intent = Intent(this, HasilActivity::class.java).apply {
+                putExtra("EXTRA_NAMA", nama)
+                putExtra("EXTRA_NIK", nik)
+                putExtra("EXTRA_TANGGAL", tanggal)
+
+                putExtra("RIGHT_EYE_URI", rightUri)
+                putExtra("LEFT_EYE_URI", leftUri)
+                putExtra("RIGHT_LABEL", rightLabel)
+                putExtra("RIGHT_SCORE", rightScore)
+                putExtra("LEFT_LABEL", leftLabel)
+                putExtra("LEFT_SCORE", leftScore)
+
+                // Beri tahu HasilActivity untuk melakukan upload & simpan
+                putExtra("NEEDS_UPLOAD", true)
+            }
+            startActivity(intent)
+            finish() // DataPasienActivity selesai, user langsung lihat hasil
         }
+
     }
 
     // === Fungsi menampilkan date picker ===
