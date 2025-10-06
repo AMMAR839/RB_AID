@@ -11,8 +11,8 @@ import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.firebase.firestore.FirebaseFirestore
 
 class HospitalListActivity : AppCompatActivity() {
@@ -26,6 +26,7 @@ class HospitalListActivity : AppCompatActivity() {
 
     companion object {
         private const val LOCATION_REQUEST_CODE = 1001
+        private const val GPS_REQUEST_CODE = 2001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,20 +54,62 @@ class HospitalListActivity : AppCompatActivity() {
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun getUserLocation() {
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location ->
-                if (location != null) {
-                    userLat = location.latitude
-                    userLng = location.longitude
-                    loadHospitals()
-                } else {
-                    Toast.makeText(this, "Lokasi user tidak ditemukan", Toast.LENGTH_SHORT).show()
-                    loadHospitals()
+        val locationRequest = LocationRequest.create().apply {
+            priority = Priority.PRIORITY_HIGH_ACCURACY
+            interval = 1000
+            numUpdates = 1
+        }
+
+        val builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(locationRequest)
+
+        val settingsClient = LocationServices.getSettingsClient(this)
+        val task = settingsClient.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            // Lokasi sudah aktif → ambil lokasi
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    if (location != null) {
+                        userLat = location.latitude
+                        userLng = location.longitude
+                        loadHospitals()
+                    } else {
+                        // kalau null, minta update lokasi baru
+                        requestNewLocation(locationRequest)
+                    }
+                }
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    // munculin dialog ke user buat nyalain GPS
+                    exception.startResolutionForResult(this, GPS_REQUEST_CODE)
+                } catch (sendEx: Exception) {
+                    Toast.makeText(this, "Tidak bisa meminta lokasi", Toast.LENGTH_SHORT).show()
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Gagal ambil lokasi: ${it.message}", Toast.LENGTH_SHORT).show()
-            }
+        }
+    }
+
+    @Suppress("MissingPermission")
+    private fun requestNewLocation(locationRequest: LocationRequest) {
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    val location: Location? = result.lastLocation
+                    if (location != null) {
+                        userLat = location.latitude
+                        userLng = location.longitude
+                    }
+                    fusedLocationClient.removeLocationUpdates(this)
+                    loadHospitals()
+                }
+            },
+            mainLooper
+        )
     }
 
     private fun loadHospitals() {
@@ -123,7 +166,6 @@ class HospitalListActivity : AppCompatActivity() {
         }
     }
 
-
     private fun sendEmail(hospital: Hospital) {
         val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:${hospital.email}")
@@ -147,6 +189,22 @@ class HospitalListActivity : AppCompatActivity() {
                 getUserLocation()
             } else {
                 Toast.makeText(this, "Izin lokasi ditolak", Toast.LENGTH_SHORT).show()
+                loadHospitals()
+            }
+        }
+    }
+
+    // handle hasil dari dialog GPS
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == GPS_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                // user sudah nyalain GPS → ulang ambil lokasi
+                getUserLocation()
+            } else {
+                Toast.makeText(this, "Lokasi harus diaktifkan untuk menampilkan rumah sakit terdekat", Toast.LENGTH_LONG).show()
                 loadHospitals()
             }
         }
