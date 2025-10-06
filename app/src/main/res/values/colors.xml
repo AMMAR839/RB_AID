@@ -10,4 +10,6 @@
     <color name="card_bg">#FFFFFFFF</color>
     <color name="card_bg_warn">#FFF3E0</color> <!-- oranye muda saat warning -->
     <color name="tab_text_normal">#8A000000</color> <!-- 54% hitam -->
+    <color name="gray_600">#FF757575</color>
+
 </resources>

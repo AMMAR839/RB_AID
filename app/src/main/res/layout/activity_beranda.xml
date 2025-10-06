@@ -87,6 +87,7 @@
         app:strokeWidth="2sp"
         app:strokeColor="@color/white"
         app:icon="@drawable/camera_svgrepo_com"
+        app:iconTint="@color/white"
         app:iconSize="40dp"
         app:iconPadding="0dp"
         app:iconGravity="textStart"

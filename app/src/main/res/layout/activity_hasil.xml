@@ -90,15 +90,19 @@
                 android:textSize="13sp"/>
 
             <!-- Tabs -->
+
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:tabIndicatorFullWidth="false"
-                app:tabRippleColor="@color/orange"
 
-                />
+                android:background="@color/white"
+                android:forceDarkAllowed="false"
+                app:tabIndicatorFullWidth="false"
+                app:tabIndicatorColor="@color/orange"
+                app:tabSelectedTextColor="@color/orange" />
+
 
 
             <androidx.viewpager2.widget.ViewPager2
