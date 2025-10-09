@@ -22,13 +22,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Ambil foto mata kanan"
-        android:layout_marginTop="150dp"
         android:textSize="24sp"
         android:textColor="@android:color/white"
+        android:padding="20dp"
         android:layout_gravity="top|center_horizontal"
-        android:padding="20dp" />
+        android:layout_marginTop="150dp" />
 
-    <!-- PRATINJAU FOTO (muncul saat review) -->
+    <!-- Pratinjau foto saat review -->
     <ImageView
         android:id="@+id/capturedImageView"
         android:layout_width="match_parent"
@@ -38,34 +38,80 @@
         android:background="#000000"
         android:visibility="gone" />
 
-    <!-- AKSI REVIEW -->
+    <!-- Tombol JEPRET (tengah) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/captureFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/app_name"
+        app:srcCompat="@drawable/camera_svgrepo_com"
+        app:fabCustomSize="84dp"
+        app:maxImageSize="50dp"
+        app:backgroundTint="@color/orange"
+        app:tint="@android:color/white"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="24dp"
+        app:borderWidth="2dp" />
+
+
+    <!-- Pilih dari galeri (kiri) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/pickFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/set_picture_galery_svgrepo_com"
+        app:fabCustomSize="72dp"
+        app:maxImageSize="50dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="40dp"
+        android:layout_marginBottom="24dp"
+        app:backgroundTint="@color/white"
+        app:tint="@color/black"
+        />
+
+    <!-- Skip (kanan) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/skipFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/skip_next_svgrepo_com__1_"
+        app:fabCustomSize="72dp"
+        app:maxImageSize="50dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="40dp"
+        android:layout_marginBottom="24dp"
+        app:backgroundTint="@color/white"
+        app:tint="@color/black"/>
+
+    <!-- Aksi REVIEW (muncul di atas tiga FAB) -->
     <LinearLayout
         android:id="@+id/reviewActions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="36dp"
         android:orientation="horizontal"
         android:gravity="center"
-        android:visibility="gone">
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="36dp"
+        android:visibility="gone"
+        android:elevation="10dp">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/redoFab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="20dp"
-            android:contentDescription="Ambil ulang"
+            android:contentDescription="@string/app_name"
             app:srcCompat="@drawable/ic_round_retake"
             app:fabCustomSize="72dp"
             app:maxImageSize="28dp"
             app:backgroundTint="@android:color/white"
-            app:tint="@android:color/black" />
+            app:tint="@android:color/black"
+            android:layout_marginEnd="20dp" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/confirmFab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="Lanjut"
+            android:contentDescription="@string/app_name"
             app:srcCompat="@drawable/ic_round_check"
             app:fabCustomSize="72dp"
             app:maxImageSize="28dp"
@@ -73,21 +119,7 @@
             app:tint="@android:color/white" />
     </LinearLayout>
 
-    <!-- Tombol JEPRET -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/captureFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="36dp"
-        android:contentDescription="Ambil foto"
-        app:srcCompat="@drawable/camera_svgrepo_com"
-        app:fabCustomSize="84dp"
-        app:maxImageSize="32dp"
-        app:backgroundTint="@color/orange"
-        app:tint="@android:color/white" />
-
-    <!-- Flash putih -->
+    <!-- Flash putih (harus paling atas) -->
     <View
         android:id="@+id/flashOverlay"
         android:layout_width="match_parent"

@@ -59,15 +59,18 @@
         android:id="@+id/textView_info"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
+        android:layout_marginStart="10dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="26dp"
         android:gravity="center"
-        android:text="Tekan nama rumah sakit untuk konfirmasi dan mengirim email dummy."
+        android:text="Pilih rumah sakit terdekat untuk mengirim email ke dokter"
         android:textColor="@android:color/white"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <include
+        layout="@layout/layout_powered_by" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

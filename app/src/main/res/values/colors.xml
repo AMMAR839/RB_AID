@@ -3,5 +3,13 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00000000</color>
+    <color name="white_60">#99FFFFFF</color>  <!-- ~60% opacity -->
     <color name="orange">#FFC107</color>
+    <color name="accent_ok">#2E7D32</color>     <!-- hijau -->
+    <color name="accent_warn">#D32F2F</color>  <!-- merah -->
+    <color name="card_bg">#FFFFFFFF</color>
+    <color name="card_bg_warn">#FFF3E0</color> <!-- oranye muda saat warning -->
+    <color name="tab_text_normal">#8A000000</color> <!-- 54% hitam -->
+    <color name="gray_600">#FF757575</color>
+
 </resources>

@@ -7,6 +7,9 @@
     android:background="@drawable/background"
     tools:context=".BuatAkunActivity">
 
+    <include
+        layout="@layout/layout_powered_by" />
+
     <View
         android:id="@+id/overlay"
         android:layout_width="match_parent"
@@ -43,12 +46,14 @@
                     android:id="@+id/edt_email_BuatAkun"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/rounded"
                     android:drawableStart="@drawable/email"
                     android:drawablePadding="8dp"
                     android:hint="Email"
                     android:padding="16dp"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="textEmailAddress"
+                    android:background="@drawable/rounded2"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray_600"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -62,7 +67,9 @@
                     android:id="@+id/edt_nama_BuatAkun"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/rounded2"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray_600"
                     android:drawableStart="@drawable/acun"
                     android:drawablePadding="8dp"
                     android:hint="Nama"
@@ -82,7 +89,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/rounded2"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray_600"
                     android:drawableStart="@drawable/lock"
                     android:hint="Kata sandi"
                     android:padding="16dp"
@@ -102,7 +111,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="8dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/rounded2"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray_600"
                     android:drawableStart="@drawable/lock"
                     android:hint="Konfirmasi kata sandi"
                     android:padding="16dp"

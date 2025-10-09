@@ -47,6 +47,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 
+    <include
+        layout="@layout/layout_powered_by" />
+
     <!-- "Mulai cek sekarang" -->
     <TextView
         android:id="@+id/startCheckTextView"
@@ -87,6 +90,7 @@
         app:strokeWidth="2sp"
         app:strokeColor="@color/white"
         app:icon="@drawable/camera_svgrepo_com"
+        app:iconTint="@color/white"
         app:iconSize="40dp"
         app:iconPadding="0dp"
         app:iconGravity="textStart"

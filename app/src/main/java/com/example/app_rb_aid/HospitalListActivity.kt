@@ -167,13 +167,74 @@ class HospitalListActivity : AppCompatActivity() {
     }
 
     private fun sendEmail(hospital: Hospital) {
-        val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:${hospital.email}")
-            putExtra(Intent.EXTRA_SUBJECT, "Permintaan Rujukan Dummy")
-            putExtra(Intent.EXTRA_TEXT, "Halo ${hospital.name}, saya ingin meminta rujukan dummy.")
+        // --- Ambil data dari Intent yang dikirim HasilActivity ---
+        val rightUri = intent.getStringExtra("RIGHT_EYE_URI")?.let { Uri.parse(it) }
+        val leftUri  = intent.getStringExtra("LEFT_EYE_URI") ?.let { Uri.parse(it) }
+
+        val rightLabel = intent.getStringExtra("RIGHT_LABEL")
+        val leftLabel  = intent.getStringExtra("LEFT_LABEL")
+        val rightScore = if (intent.hasExtra("RIGHT_SCORE")) intent.getFloatExtra("RIGHT_SCORE", -1f) else null
+        val leftScore  = if (intent.hasExtra("LEFT_SCORE"))  intent.getFloatExtra("LEFT_SCORE",  -1f) else null
+        val diagnosis  = intent.getStringExtra("DIAGNOSIS")
+
+        val patientName = intent.getStringExtra("EXTRA_NAMA") ?: "-"
+        val nik         = intent.getStringExtra("EXTRA_NIK")
+        val dob         = intent.getStringExtra("EXTRA_TANGGAL_LAHIR")
+        val contact     = intent.getStringExtra("EXTRA_KONTAK")
+        val address     = intent.getStringExtra("EXTRA_ALAMAT")
+
+        val examDate = intent.getStringExtra("EXTRA_TANGGAL_PEMERIKSAAN") ?: ""
+        val examTime = intent.getStringExtra("EXTRA_WAKTU_PEMERIKSAAN") ?: ""
+
+        if (hospital.email.isNullOrBlank()) {
+            Toast.makeText(this, "Email rumah sakit belum tersedia", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        // --- Template email ---
+        val subject = com.example.app_rb_aid.util.EmailTemplates.subject(patientName, if (examDate.isNotBlank()) examDate else "Hari ini")
+        val body = com.example.app_rb_aid.util.EmailTemplates.body(
+            rsName = hospital.name ?: "Rumah Sakit",
+            doctorOrTeam = "Dokter/Tim",
+            patientName = patientName,
+            nik = nik, dob = dob, contact = contact, address = address,
+            examDate = if (examDate.isNotBlank()) examDate else "Hari ini",
+            examTime = examTime,
+            rightLabel = rightLabel, rightScore = rightScore,
+            leftLabel  = leftLabel,  leftScore  = leftScore,
+            diagnosis = diagnosis,
+            senderName = "Petugas/Orang Tua",
+            appOrOrg = "RB-Aid"
+        )
+
+        // --- Lampiran (opsional)
+        val attachments = arrayListOf<Uri>()
+        rightUri?.let { attachments.add(it) }
+        leftUri ?.let { attachments.add(it) }
+
+        val emailIntent = if (attachments.size <= 1) {
+            Intent(Intent.ACTION_SEND).apply {
+                type = "message/rfc822"              // biar difilter ke email client
+                putExtra(Intent.EXTRA_EMAIL, arrayOf(hospital.email))
+                putExtra(Intent.EXTRA_SUBJECT, subject)
+                putExtra(Intent.EXTRA_TEXT, body)
+                if (attachments.isNotEmpty()) putExtra(Intent.EXTRA_STREAM, attachments.first())
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        } else {
+            Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                type = "message/rfc822"
+                putExtra(Intent.EXTRA_EMAIL, arrayOf(hospital.email))
+                putExtra(Intent.EXTRA_SUBJECT, subject)
+                putExtra(Intent.EXTRA_TEXT, body)
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, attachments)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        }
+
         startActivity(Intent.createChooser(emailIntent, "Kirim Email"))
     }
+
 
     // handle hasil request permission
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
