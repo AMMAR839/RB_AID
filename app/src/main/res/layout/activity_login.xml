@@ -6,6 +6,10 @@
     android:layout_height="match_parent"
     tools:context=".LoginActivity">
 
+    <include
+        layout="@layout/layout_powered_by" />
+
+
     <ImageView
         android:id="@+id/backgroundImageView"
         android:layout_width="0dp"

@@ -17,6 +17,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
+import androidx.core.net.toUri
 
 class HasilActivity : AppCompatActivity() {
 
@@ -122,7 +123,7 @@ class HasilActivity : AppCompatActivity() {
             }
             leftUriStr?.let {
                 val ref = baseRef.child("left_eye.jpg")
-                leftUrl = ref.putFile(Uri.parse(it)).continueWithTask { ref.downloadUrl }.await().toString()
+                leftUrl = ref.putFile(it.toUri()).continueWithTask { ref.downloadUrl }.await().toString()
             }
 
             val doc = mutableMapOf<String, Any?>(

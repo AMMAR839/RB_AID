@@ -47,6 +47,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 
+    <include
+        layout="@layout/layout_powered_by" />
+
     <!-- "Mulai cek sekarang" -->
     <TextView
         android:id="@+id/startCheckTextView"

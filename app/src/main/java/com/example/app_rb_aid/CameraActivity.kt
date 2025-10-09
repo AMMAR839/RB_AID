@@ -5,7 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -47,8 +49,8 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var overlayView: CameraOverlayView
 
     private lateinit var captureFab: FloatingActionButton
-    private lateinit var pickFab: FloatingActionButton      // << NEW
-    private lateinit var skipFab: FloatingActionButton      // << NEW
+    private lateinit var pickFab: FloatingActionButton
+    private lateinit var skipFab: FloatingActionButton
 
     private lateinit var capturedImageView: ImageView
     private lateinit var reviewActions: LinearLayout
@@ -72,7 +74,7 @@ class CameraActivity : AppCompatActivity() {
     private val cloudUrl = "https://tscnn-api-468474828586.asia-southeast2.run.app/predict"
     private val http by lazy { OkHttpClient() }
 
-    // PyTorch model lokal (.pt) – taruh di assets/models/
+    // PyTorch model lokal (.pt) – taruh di assets/ (atau assets/models/ lalu sesuaikan path)
     private var localModel: Module? = null
     private val inputSize = 64
     private val MEAN = floatArrayOf(2.3147659e-05f, -5.0520233e-05f, 1.3798560e-05f)
@@ -94,7 +96,6 @@ class CameraActivity : AppCompatActivity() {
     private val galleryPicker =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri == null) return@registerForActivityResult
-            // Masuk review pakai gambar dari galeri
             enterReview(uri)
         }
 
@@ -111,8 +112,8 @@ class CameraActivity : AppCompatActivity() {
         overlayView = findViewById(R.id.CameraOverlayView)
 
         captureFab = findViewById(R.id.captureFab)
-        pickFab    = findViewById(R.id.pickFab)     // << bind
-        skipFab    = findViewById(R.id.skipFab)     // << bind
+        pickFab    = findViewById(R.id.pickFab)
+        skipFab    = findViewById(R.id.skipFab)
 
         capturedImageView = findViewById(R.id.capturedImageView)
         reviewActions = findViewById(R.id.reviewActions)
@@ -122,16 +123,9 @@ class CameraActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
         instructionText.text = "Ambil foto mata kanan"
 
-        // Load model lokal kalau offline (buat fallback juga kalau cloud gagal)
+        // Load model lokal bila offline.
         if (isOffline) {
-            try {
-                val path = assetFilePath("cnn2_precise_best.pt")
-                localModel = Module.load(path)
-                Log.d("CameraActivity", "Model lokal PyTorch dimuat.")
-            } catch (e: Exception) {
-                Log.e("CameraActivity", "Gagal load model lokal: ${e.message}")
-                localModel = null
-            }
+            ensureLocalModelLoaded()
         }
 
         // Permission kamera
@@ -144,16 +138,8 @@ class CameraActivity : AppCompatActivity() {
 
         // Actions
         captureFab.setOnClickListener { takePhoto() }
-
-        pickFab.setOnClickListener {
-            // pilih dari galeri untuk mata yang sedang aktif
-            galleryPicker.launch("image/*")
-        }
-
-        skipFab.setOnClickListener {
-            onSkipCurrentEye()
-        }
-
+        pickFab.setOnClickListener { galleryPicker.launch("image/*") }
+        skipFab.setOnClickListener { onSkipCurrentEye() }
         redoFab.setOnClickListener { exitReview(deleteFile = true) }
         confirmFab.setOnClickListener { confirmPhotoAndProceed() }
     }
@@ -181,7 +167,8 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         if (isReviewMode) return
-        // Snapshot preview + crop ROI
+
+        // Coba snapshot dari PreviewView + crop ROI
         captureRoiFromPreview()?.let { roiFile ->
             showFlash()
             lastPhotoFile = roiFile
@@ -240,12 +227,12 @@ class CameraActivity : AppCompatActivity() {
         capturedImageView.adjustViewBounds = true
         capturedImageView.setImageURI(uri)
 
-        // SEMBUNYIKAN tombol kamera/galeri/skip saat preview
+        // Sembunyikan tombol saat preview
         capturedImageView.visibility = View.VISIBLE
         reviewActions.visibility = View.VISIBLE
         captureFab.visibility = View.GONE
-        pickFab.visibility = View.GONE           // << hide gallery
-        skipFab.visibility = View.GONE           // << hide skip
+        pickFab.visibility = View.GONE
+        skipFab.visibility = View.GONE
         overlayView.visibility = View.GONE
 
         instructionText.text = if (currentEye == "RIGHT")
@@ -261,10 +248,10 @@ class CameraActivity : AppCompatActivity() {
         capturedImageView.visibility = View.GONE
         reviewActions.visibility = View.GONE
 
-        // TAMPILKAN lagi tombol kamera/galeri/skip
+        // Tampilkan kembali tombol
         captureFab.visibility = View.VISIBLE
-        pickFab.visibility = View.VISIBLE        // << show gallery
-        skipFab.visibility = View.VISIBLE        // << show skip
+        pickFab.visibility = View.VISIBLE
+        skipFab.visibility = View.VISIBLE
         overlayView.visibility = View.VISIBLE
 
         instructionText.text = if (currentEye == "RIGHT")
@@ -285,21 +272,18 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun onSkipCurrentEye() {
-        // Tandai mata saat ini sebagai SKIP (null)
         if (currentEye == "RIGHT") {
             rightEyeUri = null
             currentEye = "LEFT"
             instructionText.text = "Ambil foto mata kiri"
         } else {
             leftEyeUri = null
-            // Setelah mata kiri diputuskan (foto/galeri/skip), lanjut
             onBothPhotosReady()
         }
     }
 
     // ---------------- Setelah dua mata diputuskan ----------------
     private fun onBothPhotosReady() {
-        // Minimal satu mata harus ada
         val r = rightEyeUri
         val l = leftEyeUri
         if (r == null && l == null) {
@@ -321,6 +305,7 @@ class CameraActivity : AppCompatActivity() {
             if (isOffline) {
                 // OFFLINE → langsung ke HasilActivity
                 val go = Intent(this@CameraActivity, HasilActivity::class.java).apply {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     putExtra("EXTRA_NAMA", "Mode Offline")
                     putExtra("EXTRA_NIK", "")
                     putExtra("EXTRA_TANGGAL", "")
@@ -340,6 +325,7 @@ class CameraActivity : AppCompatActivity() {
             } else {
                 // ONLINE → lanjut isi data
                 val go = Intent(this@CameraActivity, DataPasienActivity::class.java).apply {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     putExtra("RIGHT_EYE_URI", r?.toString())
                     putExtra("LEFT_EYE_URI",  l?.toString())
                     putExtra("RIGHT_LABEL", rLabel)
@@ -358,7 +344,7 @@ class CameraActivity : AppCompatActivity() {
         // ONLINE lebih dulu kalau mode online
         if (!isOffline) {
             try {
-                val f = uriToTempFile(uri) // aman untuk content://
+                val f = prepareJpegForUpload(uri) // aman untuk HEIC/PNG/large
                 val body = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("file", f.name, f.asRequestBody("image/jpeg".toMediaType()))
@@ -366,22 +352,25 @@ class CameraActivity : AppCompatActivity() {
                 val req = Request.Builder().url(cloudUrl).post(body).build()
                 http.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
-                        val json = JSONObject(resp.body!!.string())
-                        val label = json.getString("prediction")
+                        val bodyStr = resp.body?.string().orEmpty()
+                        val json = JSONObject(bodyStr)
+                        val label = json.optString("prediction", "Unknown")
                         val conf  = json.optDouble("confidence", 0.0).toFloat()
                         return@withContext label to conf
+                    } else {
+                        Log.w("CameraActivity", "Cloud HTTP ${resp.code} → fallback offline.")
                     }
                 }
-                Log.w("CameraActivity", "Cloud response bukan 200 → fallback offline.")
             } catch (e: Exception) {
-                Log.w("CameraActivity", "Cloud error: ${e.message} → fallback offline.")
+                Log.w("CameraActivity", "Cloud error: ${e.message} → fallback offline.", e)
             }
         }
 
-        // OFFLINE (PyTorch)
+        // OFFLINE (PyTorch) — pastikan model terload meski mode online
+        ensureLocalModelLoaded()
         localModel?.let { model ->
             try {
-                val bmp = decodeBitmap(uri) // aman untuk content://
+                val bmp = decodeBitmapScaled(uri, maxDim = 512) // hemat memori
                 val scaled = Bitmap.createScaledBitmap(bmp, inputSize, inputSize, true)
                 val input = bitmapToNormalizedCHW(scaled, MEAN, STD)
                 val output = model.forward(IValue.from(input)).toTensor()
@@ -400,22 +389,76 @@ class CameraActivity : AppCompatActivity() {
         return@withContext "Unknown" to -1f
     }
 
-    // --- Helpers aman untuk content:// ---
+    // --- Helpers aman untuk content:// & memori ---
     private fun uriToTempFile(uri: Uri): File {
-        val input: InputStream = contentResolver.openInputStream(uri)
-            ?: throw IllegalStateException("Tidak bisa buka stream dari URI")
-        val outFile = File.createTempFile("picked_", ".jpg", cacheDir)
-        outFile.outputStream().use { out -> input.copyTo(out) }
+        val outFile = File.createTempFile("picked_", ".bin", cacheDir)
+        contentResolver.openInputStream(uri)?.use { input ->
+            outFile.outputStream().use { out -> input.copyTo(out) }
+        } ?: throw IllegalStateException("Tidak bisa buka stream dari URI: $uri")
         return outFile
     }
 
-    private fun decodeBitmap(uri: Uri): Bitmap {
-        return if (uri.scheme.equals("content", true)) {
-            contentResolver.openInputStream(uri).use { ins ->
-                BitmapFactory.decodeStream(ins!!)
+    /** Decode aman & di-downscale saat decode untuk hemat memori. */
+    private fun decodeBitmapScaled(uri: Uri, maxDim: Int = 1024): Bitmap {
+        return if (Build.VERSION.SDK_INT >= 28) {
+            val src = ImageDecoder.createSource(contentResolver, uri)
+            ImageDecoder.decodeBitmap(src) { decoder, info, _ ->
+                val (w, h) = info.size.width to info.size.height
+                val scale = if (w >= h) maxDim.toFloat() / w else maxDim.toFloat() / h
+                val targetW = max(1, (w * scale).toInt())
+                val targetH = max(1, (h * scale).toInt())
+                decoder.setTargetSize(targetW, targetH)
             }
         } else {
-            BitmapFactory.decodeFile(uri.path!!)
+            // 2-pass decode untuk inSampleSize
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, bounds)
+            } ?: throw IllegalStateException("Tidak bisa baca metadata gambar: $uri")
+
+            val sample = calculateInSampleSize(bounds, maxDim, maxDim)
+            val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+            contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, opts)
+                    ?: throw IllegalStateException("Gagal decode bitmap: $uri")
+            } ?: throw IllegalStateException("Tidak bisa buka stream: $uri")
+        }
+    }
+
+    private fun calculateInSampleSize(o: BitmapFactory.Options, reqW: Int, reqH: Int): Int {
+        val h = o.outHeight
+        val w = o.outWidth
+        var inSampleSize = 1
+        if (h > reqH || w > reqW) {
+            var halfH = h / 2
+            var halfW = w / 2
+            while ((halfH / inSampleSize) >= reqH && (halfW / inSampleSize) >= reqW) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+
+    /** Siapkan file JPEG untuk upload: konversi non-JPEG (HEIC/PNG) → JPEG. */
+    private fun prepareJpegForUpload(uri: Uri): File {
+        val mime = contentResolver.getType(uri)?.lowercase() ?: "image/jpeg"
+        return if (mime == "image/jpeg" || mime == "image/jpg") {
+            // Salin apa adanya ke file temp .jpg
+            val outFile = File.createTempFile("upload_", ".jpg", cacheDir)
+            contentResolver.openInputStream(uri)?.use { input ->
+                outFile.outputStream().use { out -> input.copyTo(out) }
+            } ?: throw IllegalStateException("Tidak bisa open stream: $uri")
+            outFile
+        } else {
+            // Decode + convert ke JPEG
+            val bmp = decodeBitmapScaled(uri, maxDim = 2048)
+            val outFile = File.createTempFile("upload_", ".jpg", cacheDir)
+            FileOutputStream(outFile).use { fos ->
+                if (!bmp.compress(Bitmap.CompressFormat.JPEG, 92, fos)) {
+                    throw IllegalStateException("Gagal kompres JPEG")
+                }
+            }
+            outFile
         }
     }
 
@@ -475,6 +518,20 @@ class CameraActivity : AppCompatActivity() {
             outFile.outputStream().use { out -> inp.copyTo(out) }
         }
         return outFile.absolutePath
+    }
+
+    /** Pastikan model lokal siap dipakai untuk fallback. */
+    private fun ensureLocalModelLoaded() {
+        if (localModel == null) {
+            try {
+                val path = assetFilePath("cnn2_precise_best.pt")
+                localModel = Module.load(path)
+                Log.d("CameraActivity", "Model lokal PyTorch dimuat.")
+            } catch (e: Exception) {
+                Log.e("CameraActivity", "Gagal load model lokal: ${e.message}", e)
+                localModel = null
+            }
+        }
     }
 
     override fun onDestroy() {
