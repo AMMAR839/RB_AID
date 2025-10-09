@@ -21,6 +21,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="ContentDescription" />
 
+    <include
+        layout="@layout/layout_powered_by" />
+
+
     <ImageView
         android:id="@+id/dark_overlay"
         android:layout_width="match_parent"
@@ -54,4 +58,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

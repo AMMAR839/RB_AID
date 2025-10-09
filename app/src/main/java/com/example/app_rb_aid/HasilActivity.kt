@@ -84,8 +84,33 @@ class HasilActivity : AppCompatActivity() {
         val btnDoctorContainer = findViewById<View>(R.id.btnDoctor)
         btnDoctorContainer.visibility = if (hasRB) View.VISIBLE else View.GONE
         findViewById<View>(R.id.btn_Doctor).setOnClickListener {
-            startActivity(Intent(this, HospitalListActivity::class.java))
+            val go = Intent(this, HospitalListActivity::class.java).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                // URI foto (biar bisa jadi lampiran)
+                putExtra("RIGHT_EYE_URI", rightUriStr)
+                putExtra("LEFT_EYE_URI",  leftUriStr)
+
+                // Hasil model online
+                putExtra("RIGHT_LABEL", rightLabel)
+                putExtra("RIGHT_SCORE", rightScore)
+                putExtra("LEFT_LABEL",  leftLabel)
+                putExtra("LEFT_SCORE",  leftScore)
+                putExtra("DIAGNOSIS",   buildDiagnosis(rightLabel, leftLabel))
+
+                // Data pasien & waktu (isi sesuai yang kamu punya)
+                putExtra("EXTRA_NAMA", nama)
+                putExtra("EXTRA_NIK",  nik)
+                putExtra("EXTRA_TANGGAL_LAHIR", "")   // isi kalau ada
+                putExtra("EXTRA_KONTAK", "")          // isi kalau ada
+                putExtra("EXTRA_ALAMAT", "")          // isi kalau ada
+
+                putExtra("EXTRA_TANGGAL_PEMERIKSAAN", tanggal) // atau tanggal sekarang
+                putExtra("EXTRA_WAKTU_PEMERIKSAAN",   "")       // mis. "14:30 WIB"
+            }
+            startActivity(go)
         }
+
 
         // ---------- Back ----------
         findViewById<ImageView>(R.id.back_button_data_pasien).setOnClickListener { finish() }
