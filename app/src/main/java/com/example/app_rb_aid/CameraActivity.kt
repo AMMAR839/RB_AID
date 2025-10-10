@@ -38,6 +38,8 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.max
 import kotlin.math.min
+import org.pytorch.torchvision.TensorImageUtils
+
 
 class CameraActivity : AppCompatActivity() {
 
@@ -73,14 +75,13 @@ class CameraActivity : AppCompatActivity() {
     private var lastPhotoFile: File? = null
 
     // ---------- Inference ----------
-    private val cloudUrl = "https://tscnn-api-468474828586.asia-southeast2.run.app/predict"
+    private val cloudUrlCamera = "https://tscnn-api-468474828586.asia-southeast2.run.app/predict"
+    private val cloudUrlLocal  = "https://tscnn-api-468474828586.asia-southeast2.run.app/predictlocal" // 🟢 update endpoint predictlocal
     private val http by lazy { OkHttpClient() }
 
     // PyTorch model lokal (.pt) – taruh di assets/
     private var localModel: Module? = null
-    private val inputSize = 64
-    private val MEAN = floatArrayOf(2.3147659e-05f, -5.0520233e-05f, 1.3798560e-05f)
-    private val STD  = floatArrayOf(0.8244203f, 0.8003612f, 0.7935678f)
+    private val inputSize = 224
 
     // ---------- Coroutines ----------
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -110,6 +111,7 @@ class CameraActivity : AppCompatActivity() {
     private val galleryPicker =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri == null) return@registerForActivityResult
+            lastPhotoFile = null // 🟢 tandai bahwa ini gambar galeri, bukan kamera
             enterReview(uri)
         }
 
@@ -378,59 +380,107 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
-    // ---------------- Inference (online → fallback offline) ----------------
+    private fun preprocessSoftfile(bitmap: Bitmap): Tensor {
+        val safe = if (bitmap.config != Bitmap.Config.ARGB_8888) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, false)
+        } else bitmap
+        val resized = Bitmap.createScaledBitmap(safe, inputSize, inputSize, true)
+        return TensorImageUtils.bitmapToFloat32Tensor(
+            resized,
+            floatArrayOf(0.485f, 0.456f, 0.406f),
+            floatArrayOf(0.229f, 0.224f, 0.225f)
+        )
+    }
+
+    private fun preprocessCamera(bitmap: Bitmap): Tensor {
+        // Perbaikan ringan: copy ke ARGB_8888 agar aman, lalu resize
+        val img = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+        val resized = Bitmap.createScaledBitmap(img, inputSize, inputSize, true)
+        return TensorImageUtils.bitmapToFloat32Tensor(
+            resized,
+            floatArrayOf(0.485f, 0.456f, 0.406f),
+            floatArrayOf(0.229f, 0.224f, 0.225f)
+        )
+    }
+
+    // ---------------- Inference (online/offline + kamera/galeri) ----------------
     private suspend fun runInference(uri: Uri): Pair<String, Float> = withContext(Dispatchers.IO) {
-        // ONLINE lebih dulu kalau mode online
-        if (!isOffline) {
-            try {
-                val f = prepareJpegForUpload(uri) // aman untuk HEIC/PNG/large
-                val body = MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("file", f.name, f.asRequestBody("image/jpeg".toMediaType()))
-                    .build()
-                val req = Request.Builder().url(cloudUrl).post(body).build()
-                http.newCall(req).execute().use { resp ->
-                    if (resp.isSuccessful) {
-                        val bodyStr = resp.body?.string().orEmpty()
-                        val json = JSONObject(bodyStr)
-                        val label = json.optString("prediction", "Unknown")
-                        val conf  = json.optDouble("confidence", 0.0).toFloat()
-                        return@withContext label to conf
-                    } else {
-                        Log.w("CameraActivity", "Cloud HTTP ${resp.code} → fallback offline.")
-                    }
+        val isFromCamera = (lastPhotoFile != null)
+        Log.d(
+            "CameraActivity",
+            "🧠 Mode: ${if (isOffline) "OFFLINE" else "ONLINE"} | Source: ${if (isFromCamera) "Camera" else "Gallery"}"
+        )
+
+        // ==========================================================
+        // 🔵 OFFLINE MODE → langsung pakai model lokal (CDN.pt)
+        // ==========================================================
+        if (isOffline) {
+            ensureLocalModelLoaded()
+            localModel?.let { model ->
+                try {
+                    // decode dan pilih preprocessing sesuai sumber
+                    val bmp = decodeBitmapScaled(uri, maxDim = 512)
+                    val input = if (isFromCamera) preprocessCamera(bmp) else preprocessSoftfile(bmp)
+
+                    // forward ke model CDN lokal
+                    val output = model.forward(IValue.from(input)).toTensor()
+                    val out = output.dataAsFloatArray
+                    if (out.isEmpty()) return@withContext "Unknown" to -1f
+
+                    // softmax manual
+                    val exps = out.map { kotlin.math.exp(it.toDouble()) }
+                    val probs = exps.map { (it / exps.sum()).toFloat() }
+                    val idx = probs.indices.maxByOrNull { probs[it] } ?: 0
+                    val conf = probs[idx]
+                    val label = if (idx == 0) "RB" else "Normal"
+
+                    Log.d("OfflineInference", "Output=${probs.joinToString()}, label=$label conf=$conf")
+                    return@withContext label to conf
+
+                } catch (e: Exception) {
+                    Log.e("OfflineInference", "Error offline: ${e.message}", e)
                 }
-            } catch (e: Exception) {
-                Log.w("CameraActivity", "Cloud error: ${e.message} → fallback offline.", e)
             }
+            return@withContext "Unknown" to -1f
         }
 
-        // OFFLINE (PyTorch)
-        ensureLocalModelLoaded()
-        localModel?.let { model ->
-            try {
-                val bmp = decodeBitmapScaled(uri, maxDim = 512) // hemat memori
-                val scaled = Bitmap.createScaledBitmap(bmp, inputSize, inputSize, true)
-                val input = bitmapToNormalizedCHW(scaled, MEAN, STD)
-                val output = model.forward(IValue.from(input)).toTensor()
-                val out = output.dataAsFloatArray
-                if (out.isEmpty()) return@withContext "Unknown" to -1f
+        // ==========================================================
+        // 🟢 ONLINE MODE → kirim ke Cloud Run API
+        // ==========================================================
+        try {
+            // pilih endpoint sesuai sumber gambar
+            val endpoint = if (isFromCamera) cloudUrlCamera else cloudUrlLocal
+            Log.d("CameraActivity", "🌐 Sending to endpoint: $endpoint")
 
-                var idx = 0
-                var best = out[0]
-                for (i in 1 until out.size) if (out[i] > best) { best = out[i]; idx = i }
-                val label = if (idx == 0) "Retinoblastoma" else "Normal"
-                return@withContext label to best
-            } catch (e: Exception) {
-                Log.e("OfflineInference", "Error offline: ${e.message}", e)
+            val f = prepareJpegForUpload(uri)
+            val body = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", f.name, f.asRequestBody("image/jpeg".toMediaType()))
+                .build()
+            val req = Request.Builder().url(endpoint).post(body).build()
+
+            http.newCall(req).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    val json = JSONObject(resp.body?.string().orEmpty())
+                    val label = json.optString("prediction", "Unknown")
+                    val conf  = json.optDouble("confidence", 0.0).toFloat()
+                    Log.d("OnlineInference", "✅ Response: $label (${String.format("%.2f", conf)})")
+                    return@withContext label to conf
+                } else {
+                    Log.w("CameraActivity", "HTTP ${resp.code}")
+                }
             }
+        } catch (e: Exception) {
+            Log.w("CameraActivity", "Cloud error: ${e.message}", e)
         }
+
+        // fallback default
         return@withContext "Unknown" to -1f
     }
 
     /** Decode aman & di-downscale saat decode untuk hemat memori. */
     private fun decodeBitmapScaled(uri: Uri, maxDim: Int = 1024): Bitmap {
-        return if (Build.VERSION.SDK_INT >= 28) {
+        val raw = if (Build.VERSION.SDK_INT >= 28) {
             val src = ImageDecoder.createSource(contentResolver, uri)
             ImageDecoder.decodeBitmap(src) { decoder, info, _ ->
                 val (w, h) = info.size.width to info.size.height
@@ -446,12 +496,20 @@ class CameraActivity : AppCompatActivity() {
             } ?: throw IllegalStateException("Tidak bisa baca metadata gambar: $uri")
 
             val sample = calculateInSampleSize(bounds, maxDim, maxDim)
-            val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+            val opts = BitmapFactory.Options().apply {
+                inSampleSize = sample
+                inPreferredConfig = Bitmap.Config.ARGB_8888   // 🟢 penting
+            }
             contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, opts)
                     ?: throw IllegalStateException("Gagal decode bitmap: $uri")
             } ?: throw IllegalStateException("Tidak bisa buka stream: $uri")
         }
+
+        // 🟢 pastikan ARGB_8888
+        return if (raw.config != Bitmap.Config.ARGB_8888) {
+            raw.copy(Bitmap.Config.ARGB_8888, /*mutable=*/false)
+        } else raw
     }
 
     private fun calculateInSampleSize(o: BitmapFactory.Options, reqW: Int, reqH: Int): Int {
@@ -490,33 +548,6 @@ class CameraActivity : AppCompatActivity() {
     }
 
     // --- preprocess PyTorch (CHW) ---
-    private fun bitmapToNormalizedCHW(bmp: Bitmap, mean: FloatArray, std: FloatArray): Tensor {
-        val w = bmp.width
-        val h = bmp.height
-        val pixels = IntArray(w * h)
-        bmp.getPixels(pixels, 0, w, 0, 0, w, h)
-
-        val ch = 3
-        val arr = FloatArray(1 * ch * h * w)
-        var rIdx = 0
-        var gIdx = h * w
-        var bIdx = 2 * h * w
-
-        for (y in 0 until h) {
-            val off = y * w
-            for (x in 0 until w) {
-                val p = pixels[off + x]
-                val r = ((p shr 16) and 0xFF) / 255f
-                val g = ((p shr 8) and 0xFF) / 255f
-                val b = (p and 0xFF) / 255f
-
-                arr[rIdx++] = (r - mean[0]) / std[0]
-                arr[gIdx++] = (g - mean[1]) / std[1]
-                arr[bIdx++] = (b - mean[2]) / std[2]
-            }
-        }
-        return Tensor.fromBlob(arr, longArrayOf(1, 3, h.toLong(), w.toLong()))
-    }
 
     private fun normalizeLabel(raw: String): String = when {
         raw.equals("RB", true) -> "RB"
@@ -551,11 +582,11 @@ class CameraActivity : AppCompatActivity() {
     private fun ensureLocalModelLoaded() {
         if (localModel == null) {
             try {
-                val path = assetFilePath("cnn2_precise_best.pt")
+                val path = assetFilePath("CDNjit.pt")
                 localModel = Module.load(path)
-                Log.d("CameraActivity", "Model lokal PyTorch dimuat.")
+                Log.d("CameraActivity", "✅ CDN lokal dimuat untuk offline mode.")
             } catch (e: Exception) {
-                Log.e("CameraActivity", "Gagal load model lokal: ${e.message}", e)
+                Log.e("CameraActivity", "Gagal load CDN: ${e.message}", e)
                 localModel = null
             }
         }
