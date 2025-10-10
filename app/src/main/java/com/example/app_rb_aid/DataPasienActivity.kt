@@ -1,5 +1,6 @@
 package com.example.app_rb_aid
 
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -106,6 +107,14 @@ class DataPasienActivity : AppCompatActivity() {
 
                 // Beri tahu HasilActivity untuk melakukan upload & simpan
                 putExtra("NEEDS_UPLOAD", true)
+
+                val uris = mutableListOf<Uri>()
+                rightUri?.let { uris.add(Uri.parse(it)) }
+                leftUri ?.let { uris.add(Uri.parse(it)) }
+                if (uris.isNotEmpty()) {
+                    clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
+                    for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                }
             }
             startActivity(intent)
             finish() // DataPasienActivity selesai, user langsung lihat hasil
@@ -215,6 +224,7 @@ class DataPasienActivity : AppCompatActivity() {
                 Toast.makeText(this@DataPasienActivity, "Gagal simpan: ${e.message}", Toast.LENGTH_LONG).show()
                 val diagnosis = buildDiagnosis(rightLabel, leftLabel)
                 goToHasilOnline(nama, nik, tanggal, null, null, diagnosis)
+
             }
         }
     }
@@ -243,6 +253,14 @@ class DataPasienActivity : AppCompatActivity() {
             putExtra("LEFT_URL", leftUrl)
 
             putExtra("DIAGNOSIS", diagnosis)
+            val uris = mutableListOf<Uri>()
+            rightUri?.let { uris.add(Uri.parse(it)) }
+            leftUri ?.let { uris.add(Uri.parse(it)) }
+            if (uris.isNotEmpty()) {
+                clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
+                for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+            }
+
         }
         startActivity(intent)
         finish()
@@ -263,7 +281,15 @@ class DataPasienActivity : AppCompatActivity() {
             putExtra("LEFT_SCORE", leftScore)
 
             putExtra("DIAGNOSIS", diagnosis)
-        }
+            val uris = mutableListOf<Uri>()
+            rightUri?.let { uris.add(Uri.parse(it)) }
+            leftUri ?.let { uris.add(Uri.parse(it)) }
+            if (uris.isNotEmpty()) {
+                clipData = ClipData.newUri(contentResolver, "eye", uris[0])
+                for (i in 1 until uris.size) {
+                    clipData!!.addItem(ClipData.Item(uris[i]))
+                }
+        }}
         startActivity(intent)
         finish()
     }

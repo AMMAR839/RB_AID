@@ -17,6 +17,6 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginTop="24dp"
-        android:src="@drawable/gambar_tutor"
+        android:src="@drawable/gambar"
         android:contentDescription="Step 1"/>
 </LinearLayout>

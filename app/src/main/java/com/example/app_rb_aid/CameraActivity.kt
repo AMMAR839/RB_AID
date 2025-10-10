@@ -319,6 +319,13 @@ class CameraActivity : AppCompatActivity() {
                     putExtra("LEFT_SCORE",  lScore)
 
                     putExtra("DIAGNOSIS", diagnosis)
+                    val uris = mutableListOf<Uri>()
+                    r?.let { uris.add(it) }
+                    l?.let { uris.add(it) }
+                    if (uris.isNotEmpty()) {
+                        clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
+                        for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                    }
                 }
                 startActivity(go)
                 finish()
@@ -332,7 +339,13 @@ class CameraActivity : AppCompatActivity() {
                     putExtra("RIGHT_SCORE", rScore)
                     putExtra("LEFT_LABEL",  lLabel)
                     putExtra("LEFT_SCORE",  lScore)
-                }
+                    val uris = mutableListOf<Uri>()
+                    r?.let { uris.add(it) }
+                    l?.let { uris.add(it) }
+                    if (uris.isNotEmpty()) {
+                        clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
+                        for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                }}
                 startActivity(go)
                 finish()
             }

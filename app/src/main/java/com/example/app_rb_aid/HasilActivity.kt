@@ -36,6 +36,29 @@ class HasilActivity : AppCompatActivity() {
     private fun isPositive(label: String?): Boolean =
         label?.equals("RB", true) == true || (label?.contains("retinoblastoma", true) == true)
 
+    private fun makeLocalShareableUri(srcStr: String?): String? {
+        if (srcStr.isNullOrBlank()) return null
+        val src = Uri.parse(srcStr)
+        return try {
+            // Jika sudah dari FileProvider app sendiri, biarkan
+            if (src.scheme == "content" && src.authority == "${packageName}.fileprovider") {
+                return src.toString()
+            }
+            // Salin konten ke cache lalu jadikan content:// fileprovider
+            val out = java.io.File(cacheDir, "share_${System.currentTimeMillis()}.jpg")
+            contentResolver.openInputStream(src)?.use { input ->
+                out.outputStream().use { output -> input.copyTo(output) }
+            } ?: return null
+
+            val shareUri = androidx.core.content.FileProvider.getUriForFile(
+                this, "${packageName}.fileprovider", out
+            )
+            shareUri.toString()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hasil)
@@ -53,6 +76,8 @@ class HasilActivity : AppCompatActivity() {
         leftScore   = intent.getFloatExtra("LEFT_SCORE", -1f)
 
         val diagnosis = buildDiagnosis(rightLabel, leftLabel)
+        rightUriStr = makeLocalShareableUri(rightUriStr)
+        leftUriStr  = makeLocalShareableUri(leftUriStr)
 
         // ---------- Header / ringkasan ----------
         val ivStatus = findViewById<ImageView>(R.id.ivStatus)
@@ -92,11 +117,6 @@ class HasilActivity : AppCompatActivity() {
                 putExtra("LEFT_EYE_URI",  leftUriStr)
 
                 // Hasil model online
-                putExtra("RIGHT_LABEL", rightLabel)
-                putExtra("RIGHT_SCORE", rightScore)
-                putExtra("LEFT_LABEL",  leftLabel)
-                putExtra("LEFT_SCORE",  leftScore)
-                putExtra("DIAGNOSIS",   buildDiagnosis(rightLabel, leftLabel))
 
                 // Data pasien & waktu (isi sesuai yang kamu punya)
                 putExtra("EXTRA_NAMA", nama)
@@ -106,7 +126,16 @@ class HasilActivity : AppCompatActivity() {
                 putExtra("EXTRA_ALAMAT", "")          // isi kalau ada
 
                 putExtra("EXTRA_TANGGAL_PEMERIKSAAN", tanggal) // atau tanggal sekarang
-                putExtra("EXTRA_WAKTU_PEMERIKSAAN",   "")       // mis. "14:30 WIB"
+                putExtra("EXTRA_WAKTU_PEMERIKSAAN",   "") // mis. "14:30 WIB"
+
+                val uris = mutableListOf<Uri>()
+                rightUriStr?.let { uris.add(Uri.parse(it)) }
+                leftUriStr ?.let { uris.add(Uri.parse(it)) }
+                if (uris.isNotEmpty()) {
+                    clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
+                    for (i in 1 until uris.size) {
+                        clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                    } }
             }
             startActivity(go)
         }

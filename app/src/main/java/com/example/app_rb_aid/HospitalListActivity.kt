@@ -200,8 +200,6 @@ class HospitalListActivity : AppCompatActivity() {
             nik = nik, dob = dob, contact = contact, address = address,
             examDate = if (examDate.isNotBlank()) examDate else "Hari ini",
             examTime = examTime,
-            rightLabel = rightLabel, rightScore = rightScore,
-            leftLabel  = leftLabel,  leftScore  = leftScore,
             diagnosis = diagnosis,
             senderName = "Petugas/Orang Tua",
             appOrOrg = "RB-Aid"

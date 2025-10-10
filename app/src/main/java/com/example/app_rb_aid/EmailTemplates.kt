@@ -15,8 +15,6 @@ object EmailTemplates {
         address: String?,
         examDate: String,
         examTime: String,
-        rightLabel: String?, rightScore: Float?,
-        leftLabel: String?,  leftScore: Float?,
         diagnosis: String?,
         senderName: String,
         appOrOrg: String
@@ -36,9 +34,6 @@ Data Pasien
 
 Detail Pemeriksaan
 • Tanggal/Waktu : $examDate $examTime
-• Mode          : ONLINE
-• Mata Kanan    : ${rightLabel ?: "-"} (skor ${s(rightScore)})
-• Mata Kiri     : ${leftLabel  ?: "-"} (skor ${s(leftScore)})
 • Ringkasan     : ${diagnosis ?: "-"}
 
 Lampiran
