@@ -3,9 +3,9 @@ package com.example.app_rb_aid
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
-import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -17,7 +17,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -31,7 +34,6 @@ import org.pytorch.Module
 import org.pytorch.Tensor
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.max
@@ -164,16 +166,10 @@ class CameraActivity : AppCompatActivity() {
         val future = ProcessCameraProvider.getInstance(this)
         future.addListener({
             val provider = future.get()
-
-            val preview = Preview.Builder()
-                .setTargetRotation(previewView.display.rotation)
-                .build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
-
-            imageCapture = ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .setTargetRotation(previewView.display.rotation)
-                .build()
-
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(previewView.surfaceProvider)
+            }
+            imageCapture = ImageCapture.Builder().build()
             try {
                 provider.unbindAll()
                 provider.bindToLifecycle(
@@ -188,8 +184,17 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         if (isReviewMode) return
-        val imageCapture = imageCapture ?: return
 
+        // Coba snapshot dari PreviewView + crop ROI
+        captureRoiFromPreview()?.let { roiFile ->
+            showFlash()
+            lastPhotoFile = roiFile
+            enterReview(Uri.fromFile(roiFile))
+            return
+        }
+
+        // Fallback: ImageCapture
+        val imageCapture = imageCapture ?: return
         val dir = externalCacheDir ?: cacheDir
         val photoFile = File(dir, "${System.currentTimeMillis()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -208,6 +213,26 @@ class CameraActivity : AppCompatActivity() {
                 }
             }
         )
+    }
+
+    /** Ambil bitmap dari PreviewView, crop sesuai kotak overlay, simpan JPG. */
+    private fun captureRoiFromPreview(): File? {
+        val bmp: Bitmap = previewView.bitmap ?: return null
+        val box = overlayView.getBoxRect()
+
+        val L = max(0f, min(box.left,  bmp.width - 1f))
+        val T = max(0f, min(box.top,   bmp.height - 1f))
+        val R = max(L + 1, min(box.right,  bmp.width.toFloat())).toFloat()
+        val B = max(T + 1, min(box.bottom, bmp.height.toFloat())).toFloat()
+
+        val cw = (R - L).toInt()
+        val ch = (B - T).toInt()
+        if (cw < 4 || ch < 4) return null
+
+        val cropped = Bitmap.createBitmap(bmp, L.toInt(), T.toInt(), cw, ch)
+        val out = File((externalCacheDir ?: cacheDir), "roi_${System.currentTimeMillis()}.jpg")
+        FileOutputStream(out).use { cropped.compress(Bitmap.CompressFormat.JPEG, 95, it) }
+        return out
     }
 
     // ---------------- Review ----------------
@@ -358,7 +383,7 @@ class CameraActivity : AppCompatActivity() {
         // ONLINE lebih dulu kalau mode online
         if (!isOffline) {
             try {
-                val f = prepareJpegForUpload(uri) // gunakan file asli bila JPEG
+                val f = prepareJpegForUpload(uri) // aman untuk HEIC/PNG/large
                 val body = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("file", f.name, f.asRequestBody("image/jpeg".toMediaType()))
@@ -384,7 +409,7 @@ class CameraActivity : AppCompatActivity() {
         ensureLocalModelLoaded()
         localModel?.let { model ->
             try {
-                val bmp = try { decodeBitmapFull(uri) } catch (oom: OutOfMemoryError) { Log.w("OfflineInference","OOM full-res, fallback ke 4096"); decodeBitmapScaled(uri, maxDim = 4096) } // full-res bila memungkinkan
+                val bmp = decodeBitmapScaled(uri, maxDim = 512) // hemat memori
                 val scaled = Bitmap.createScaledBitmap(bmp, inputSize, inputSize, true)
                 val input = bitmapToNormalizedCHW(scaled, MEAN, STD)
                 val output = model.forward(IValue.from(input)).toTensor()
@@ -403,29 +428,8 @@ class CameraActivity : AppCompatActivity() {
         return@withContext "Unknown" to -1f
     }
 
-    /** Decode aman & mempertahankan orientasi. ImageDecoder (API 28+) sudah hormati EXIF. */
-    private fun decodeBitmapFull(uri: Uri): Bitmap {
-        return if (Build.VERSION.SDK_INT >= 28) {
-            val src = ImageDecoder.createSource(contentResolver, uri)
-            ImageDecoder.decodeBitmap(src) // tanpa setTargetSize → full-res
-        } else {
-            val opts = BitmapFactory.Options().apply { inSampleSize = 1; inPreferredConfig = Bitmap.Config.ARGB_8888 }
-            val decoded = contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it, null, opts)
-                    ?: throw IllegalStateException("Gagal decode bitmap: $uri")
-            } ?: throw IllegalStateException("Tidak bisa buka stream: $uri")
-
-            val orientation = contentResolver.openInputStream(uri)?.use { ins ->
-                try { ExifInterface(ins).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
-                catch (_: Exception) { ExifInterface.ORIENTATION_NORMAL }
-            } ?: ExifInterface.ORIENTATION_NORMAL
-
-            applyExifRotation(decoded, orientation)
-        }
-    }
-
-    /** Decode aman & menurunkan ukuran saat perlu (fallback). ImageDecoder (API 28+) sudah hormati EXIF. */
-    private fun decodeBitmapScaled(uri: Uri, maxDim: Int = 2048): Bitmap {
+    /** Decode aman & di-downscale saat decode untuk hemat memori. */
+    private fun decodeBitmapScaled(uri: Uri, maxDim: Int = 1024): Bitmap {
         return if (Build.VERSION.SDK_INT >= 28) {
             val src = ImageDecoder.createSource(contentResolver, uri)
             ImageDecoder.decodeBitmap(src) { decoder, info, _ ->
@@ -442,18 +446,11 @@ class CameraActivity : AppCompatActivity() {
             } ?: throw IllegalStateException("Tidak bisa baca metadata gambar: $uri")
 
             val sample = calculateInSampleSize(bounds, maxDim, maxDim)
-            val opts = BitmapFactory.Options().apply { inSampleSize = sample; inPreferredConfig = Bitmap.Config.ARGB_8888 }
-            val decoded = contentResolver.openInputStream(uri)?.use {
+            val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+            contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, opts)
                     ?: throw IllegalStateException("Gagal decode bitmap: $uri")
             } ?: throw IllegalStateException("Tidak bisa buka stream: $uri")
-
-            val orientation = contentResolver.openInputStream(uri)?.use { ins ->
-                try { ExifInterface(ins).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
-                catch (_: Exception) { ExifInterface.ORIENTATION_NORMAL }
-            } ?: ExifInterface.ORIENTATION_NORMAL
-
-            applyExifRotation(decoded, orientation)
         }
     }
 
@@ -471,46 +468,25 @@ class CameraActivity : AppCompatActivity() {
         return inSampleSize
     }
 
-    private fun applyExifRotation(src: Bitmap, orientation: Int): Bitmap {
-        val m = Matrix()
-        when (orientation) {
-            ExifInterface.ORIENTATION_ROTATE_90 -> m.postRotate(90f)
-            ExifInterface.ORIENTATION_ROTATE_180 -> m.postRotate(180f)
-            ExifInterface.ORIENTATION_ROTATE_270 -> m.postRotate(270f)
-            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> m.preScale(-1f, 1f)
-            ExifInterface.ORIENTATION_FLIP_VERTICAL -> m.preScale(1f, -1f)
-            else -> return src
-        }
-        return Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
-    }
-
-    /** Siapkan file JPEG untuk upload: pilih file asli bila sudah JPEG (hindari recompress). */
+    /** Siapkan file JPEG untuk upload: konversi non-JPEG → JPEG. */
     private fun prepareJpegForUpload(uri: Uri): File {
-        return if (isJpeg(uri)) {
+        val mime = contentResolver.getType(uri)?.lowercase() ?: "image/jpeg"
+        return if (mime == "image/jpeg" || mime == "image/jpg") {
             val outFile = File.createTempFile("upload_", ".jpg", cacheDir)
             contentResolver.openInputStream(uri)?.use { input ->
                 outFile.outputStream().use { out -> input.copyTo(out) }
             } ?: throw IllegalStateException("Tidak bisa open stream: $uri")
             outFile
         } else {
-            val bmp = decodeBitmapScaled(uri, maxDim = 4096) // jaga detail
+            val bmp = decodeBitmapScaled(uri, maxDim = 2048)
             val outFile = File.createTempFile("upload_", ".jpg", cacheDir)
             FileOutputStream(outFile).use { fos ->
-                if (!bmp.compress(Bitmap.CompressFormat.JPEG, 95, fos)) {
+                if (!bmp.compress(Bitmap.CompressFormat.JPEG, 92, fos)) {
                     throw IllegalStateException("Gagal kompres JPEG")
                 }
             }
             outFile
         }
-    }
-
-    private fun isJpeg(uri: Uri): Boolean {
-        return try {
-            contentResolver.openInputStream(uri)?.use { ins ->
-                val b1 = ins.read(); val b2 = ins.read()
-                b1 == 0xFF && b2 == 0xD8 // marker SOI JPEG
-            } ?: false
-        } catch (_: Exception) { false }
     }
 
     // --- preprocess PyTorch (CHW) ---
@@ -591,3 +567,4 @@ class CameraActivity : AppCompatActivity() {
         if (::cameraExecutor.isInitialized) cameraExecutor.shutdown()
     }
 }
+
