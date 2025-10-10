@@ -3,9 +3,9 @@ package com.example.app_rb_aid
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.*
 import android.graphics.ImageDecoder
+import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -17,10 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -57,6 +54,9 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var redoFab: FloatingActionButton
     private lateinit var confirmFab: FloatingActionButton
 
+    private lateinit var loadingBlockerML: View
+    private lateinit var loadingOverlayML: View
+
     // ---------- Camera ----------
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
@@ -74,7 +74,7 @@ class CameraActivity : AppCompatActivity() {
     private val cloudUrl = "https://tscnn-api-468474828586.asia-southeast2.run.app/predict"
     private val http by lazy { OkHttpClient() }
 
-    // PyTorch model lokal (.pt) – taruh di assets/ (atau assets/models/ lalu sesuaikan path)
+    // PyTorch model lokal (.pt) – taruh di assets/
     private var localModel: Module? = null
     private val inputSize = 64
     private val MEAN = floatArrayOf(2.3147659e-05f, -5.0520233e-05f, 1.3798560e-05f)
@@ -92,6 +92,18 @@ class CameraActivity : AppCompatActivity() {
             }
         }
 
+    private fun showMLLoading(show: Boolean) {
+        loadingBlockerML.visibility = if (show) View.VISIBLE else View.GONE
+        loadingOverlayML.visibility = if (show) View.VISIBLE else View.GONE
+
+        // Kunci semua aksi supaya tidak double-tap
+        captureFab.isEnabled = !show
+        pickFab.isEnabled    = !show
+        skipFab.isEnabled    = !show
+        redoFab.isEnabled    = !show
+        confirmFab.isEnabled = !show
+    }
+
     // ---------- Gallery picker ----------
     private val galleryPicker =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -102,6 +114,9 @@ class CameraActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
+
+        loadingBlockerML = findViewById(R.id.loadingBlockerML)
+        loadingOverlayML = findViewById(R.id.loadingOverlayML)
 
         isOffline = (ModeManager.mode == ModeManager.Mode.OFFLINE)
 
@@ -149,10 +164,16 @@ class CameraActivity : AppCompatActivity() {
         val future = ProcessCameraProvider.getInstance(this)
         future.addListener({
             val provider = future.get()
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-            imageCapture = ImageCapture.Builder().build()
+
+            val preview = Preview.Builder()
+                .setTargetRotation(previewView.display.rotation)
+                .build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
+
+            imageCapture = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                .setTargetRotation(previewView.display.rotation)
+                .build()
+
             try {
                 provider.unbindAll()
                 provider.bindToLifecycle(
@@ -167,17 +188,8 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         if (isReviewMode) return
-
-        // Coba snapshot dari PreviewView + crop ROI
-        captureRoiFromPreview()?.let { roiFile ->
-            showFlash()
-            lastPhotoFile = roiFile
-            enterReview(Uri.fromFile(roiFile))
-            return
-        }
-
-        // Fallback: ImageCapture
         val imageCapture = imageCapture ?: return
+
         val dir = externalCacheDir ?: cacheDir
         val photoFile = File(dir, "${System.currentTimeMillis()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -196,26 +208,6 @@ class CameraActivity : AppCompatActivity() {
                 }
             }
         )
-    }
-
-    /** Ambil bitmap dari PreviewView, crop sesuai kotak overlay, simpan JPG. */
-    private fun captureRoiFromPreview(): File? {
-        val bmp: Bitmap = previewView.bitmap ?: return null
-        val box = overlayView.getBoxRect()
-
-        val L = max(0f, min(box.left,  bmp.width - 1f))
-        val T = max(0f, min(box.top,   bmp.height - 1f))
-        val R = max(L + 1, min(box.right,  bmp.width.toFloat())).toFloat()
-        val B = max(T + 1, min(box.bottom, bmp.height.toFloat())).toFloat()
-
-        val cw = (R - L).toInt()
-        val ch = (B - T).toInt()
-        if (cw < 4 || ch < 4) return null
-
-        val cropped = Bitmap.createBitmap(bmp, L.toInt(), T.toInt(), cw, ch)
-        val out = File((externalCacheDir ?: cacheDir), "roi_${System.currentTimeMillis()}.jpg")
-        FileOutputStream(out).use { cropped.compress(Bitmap.CompressFormat.JPEG, 95, it) }
-        return out
     }
 
     // ---------------- Review ----------------
@@ -291,63 +283,72 @@ class CameraActivity : AppCompatActivity() {
             return
         }
 
+        showMLLoading(true)
+
         scope.launch {
-            val (rawRLabel, rScore) = if (r != null) runInference(r) else "Unknown" to -1f
-            val (rawLLabel, lScore) = if (l != null) runInference(l) else "Unknown" to -1f
+            try {
+                val (rawRLabel, rScore) = if (r != null) runInference(r) else "Unknown" to -1f
+                val (rawLLabel, lScore) = if (l != null) runInference(l) else "Unknown" to -1f
 
-            val rLabel = normalizeLabel(rawRLabel)
-            val lLabel = normalizeLabel(rawLLabel)
+                val rLabel = normalizeLabel(rawRLabel)
+                val lLabel = normalizeLabel(rawLLabel)
 
-            val diagnosis = if (isPositive(rLabel) || isPositive(lLabel))
-                "Terindikasi retinoblastoma (cek ke dokter)." else
-                "Tidak terindikasi retinoblastoma."
+                val diagnosis = if (isPositive(rLabel) || isPositive(lLabel))
+                    "Terindikasi retinoblastoma (cek ke dokter)." else
+                    "Tidak terindikasi retinoblastoma."
 
-            if (isOffline) {
-                // OFFLINE → langsung ke HasilActivity
-                val go = Intent(this@CameraActivity, HasilActivity::class.java).apply {
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    putExtra("EXTRA_NAMA", "Mode Offline")
-                    putExtra("EXTRA_NIK", "")
-                    putExtra("EXTRA_TANGGAL", "")
+                if (isOffline) {
+                    // OFFLINE → langsung ke HasilActivity
+                    val go = Intent(this@CameraActivity, HasilActivity::class.java).apply {
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        putExtra("EXTRA_NAMA", "Mode Offline")
+                        putExtra("EXTRA_NIK", "")
+                        putExtra("EXTRA_TANGGAL", "")
 
-                    putExtra("RIGHT_EYE_URI", r?.toString())
-                    putExtra("LEFT_EYE_URI",  l?.toString())
+                        putExtra("RIGHT_EYE_URI", r?.toString())
+                        putExtra("LEFT_EYE_URI",  l?.toString())
 
-                    putExtra("RIGHT_LABEL", rLabel)
-                    putExtra("RIGHT_SCORE", rScore)
-                    putExtra("LEFT_LABEL",  lLabel)
-                    putExtra("LEFT_SCORE",  lScore)
+                        putExtra("RIGHT_LABEL", rLabel)
+                        putExtra("RIGHT_SCORE", rScore)
+                        putExtra("LEFT_LABEL",  lLabel)
+                        putExtra("LEFT_SCORE",  lScore)
 
-                    putExtra("DIAGNOSIS", diagnosis)
-                    val uris = mutableListOf<Uri>()
-                    r?.let { uris.add(it) }
-                    l?.let { uris.add(it) }
-                    if (uris.isNotEmpty()) {
-                        clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
-                        for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                        putExtra("DIAGNOSIS", diagnosis)
+
+                        val uris = mutableListOf<Uri>()
+                        r?.let { uris.add(it) }
+                        l?.let { uris.add(it) }
+                        if (uris.isNotEmpty()) {
+                            clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
+                            for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                        }
                     }
+                    startActivity(go)
+                    finish()
+                } else {
+                    // ONLINE → lanjut isi data pasien
+                    val go = Intent(this@CameraActivity, DataPasienActivity::class.java).apply {
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        putExtra("RIGHT_EYE_URI", r?.toString())
+                        putExtra("LEFT_EYE_URI",  l?.toString())
+                        putExtra("RIGHT_LABEL", rLabel)
+                        putExtra("RIGHT_SCORE", rScore)
+                        putExtra("LEFT_LABEL",  lLabel)
+                        putExtra("LEFT_SCORE",  lScore)
+
+                        val uris = mutableListOf<Uri>()
+                        r?.let { uris.add(it) }
+                        l?.let { uris.add(it) }
+                        if (uris.isNotEmpty()) {
+                            clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
+                            for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                        }
+                    }
+                    startActivity(go)
+                    finish()
                 }
-                startActivity(go)
-                finish()
-            } else {
-                // ONLINE → lanjut isi data
-                val go = Intent(this@CameraActivity, DataPasienActivity::class.java).apply {
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    putExtra("RIGHT_EYE_URI", r?.toString())
-                    putExtra("LEFT_EYE_URI",  l?.toString())
-                    putExtra("RIGHT_LABEL", rLabel)
-                    putExtra("RIGHT_SCORE", rScore)
-                    putExtra("LEFT_LABEL",  lLabel)
-                    putExtra("LEFT_SCORE",  lScore)
-                    val uris = mutableListOf<Uri>()
-                    r?.let { uris.add(it) }
-                    l?.let { uris.add(it) }
-                    if (uris.isNotEmpty()) {
-                        clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
-                        for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
-                }}
-                startActivity(go)
-                finish()
+            } finally {
+                if (!isFinishing) showMLLoading(false)
             }
         }
     }
@@ -357,7 +358,7 @@ class CameraActivity : AppCompatActivity() {
         // ONLINE lebih dulu kalau mode online
         if (!isOffline) {
             try {
-                val f = prepareJpegForUpload(uri) // aman untuk HEIC/PNG/large
+                val f = prepareJpegForUpload(uri) // gunakan file asli bila JPEG
                 val body = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("file", f.name, f.asRequestBody("image/jpeg".toMediaType()))
@@ -379,11 +380,11 @@ class CameraActivity : AppCompatActivity() {
             }
         }
 
-        // OFFLINE (PyTorch) — pastikan model terload meski mode online
+        // OFFLINE (PyTorch)
         ensureLocalModelLoaded()
         localModel?.let { model ->
             try {
-                val bmp = decodeBitmapScaled(uri, maxDim = 512) // hemat memori
+                val bmp = try { decodeBitmapFull(uri) } catch (oom: OutOfMemoryError) { Log.w("OfflineInference","OOM full-res, fallback ke 4096"); decodeBitmapScaled(uri, maxDim = 4096) } // full-res bila memungkinkan
                 val scaled = Bitmap.createScaledBitmap(bmp, inputSize, inputSize, true)
                 val input = bitmapToNormalizedCHW(scaled, MEAN, STD)
                 val output = model.forward(IValue.from(input)).toTensor()
@@ -402,17 +403,29 @@ class CameraActivity : AppCompatActivity() {
         return@withContext "Unknown" to -1f
     }
 
-    // --- Helpers aman untuk content:// & memori ---
-    private fun uriToTempFile(uri: Uri): File {
-        val outFile = File.createTempFile("picked_", ".bin", cacheDir)
-        contentResolver.openInputStream(uri)?.use { input ->
-            outFile.outputStream().use { out -> input.copyTo(out) }
-        } ?: throw IllegalStateException("Tidak bisa buka stream dari URI: $uri")
-        return outFile
+    /** Decode aman & mempertahankan orientasi. ImageDecoder (API 28+) sudah hormati EXIF. */
+    private fun decodeBitmapFull(uri: Uri): Bitmap {
+        return if (Build.VERSION.SDK_INT >= 28) {
+            val src = ImageDecoder.createSource(contentResolver, uri)
+            ImageDecoder.decodeBitmap(src) // tanpa setTargetSize → full-res
+        } else {
+            val opts = BitmapFactory.Options().apply { inSampleSize = 1; inPreferredConfig = Bitmap.Config.ARGB_8888 }
+            val decoded = contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, opts)
+                    ?: throw IllegalStateException("Gagal decode bitmap: $uri")
+            } ?: throw IllegalStateException("Tidak bisa buka stream: $uri")
+
+            val orientation = contentResolver.openInputStream(uri)?.use { ins ->
+                try { ExifInterface(ins).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
+                catch (_: Exception) { ExifInterface.ORIENTATION_NORMAL }
+            } ?: ExifInterface.ORIENTATION_NORMAL
+
+            applyExifRotation(decoded, orientation)
+        }
     }
 
-    /** Decode aman & di-downscale saat decode untuk hemat memori. */
-    private fun decodeBitmapScaled(uri: Uri, maxDim: Int = 1024): Bitmap {
+    /** Decode aman & menurunkan ukuran saat perlu (fallback). ImageDecoder (API 28+) sudah hormati EXIF. */
+    private fun decodeBitmapScaled(uri: Uri, maxDim: Int = 2048): Bitmap {
         return if (Build.VERSION.SDK_INT >= 28) {
             val src = ImageDecoder.createSource(contentResolver, uri)
             ImageDecoder.decodeBitmap(src) { decoder, info, _ ->
@@ -423,18 +436,24 @@ class CameraActivity : AppCompatActivity() {
                 decoder.setTargetSize(targetW, targetH)
             }
         } else {
-            // 2-pass decode untuk inSampleSize
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, bounds)
             } ?: throw IllegalStateException("Tidak bisa baca metadata gambar: $uri")
 
             val sample = calculateInSampleSize(bounds, maxDim, maxDim)
-            val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-            contentResolver.openInputStream(uri)?.use {
+            val opts = BitmapFactory.Options().apply { inSampleSize = sample; inPreferredConfig = Bitmap.Config.ARGB_8888 }
+            val decoded = contentResolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, opts)
                     ?: throw IllegalStateException("Gagal decode bitmap: $uri")
             } ?: throw IllegalStateException("Tidak bisa buka stream: $uri")
+
+            val orientation = contentResolver.openInputStream(uri)?.use { ins ->
+                try { ExifInterface(ins).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
+                catch (_: Exception) { ExifInterface.ORIENTATION_NORMAL }
+            } ?: ExifInterface.ORIENTATION_NORMAL
+
+            applyExifRotation(decoded, orientation)
         }
     }
 
@@ -452,27 +471,46 @@ class CameraActivity : AppCompatActivity() {
         return inSampleSize
     }
 
-    /** Siapkan file JPEG untuk upload: konversi non-JPEG (HEIC/PNG) → JPEG. */
+    private fun applyExifRotation(src: Bitmap, orientation: Int): Bitmap {
+        val m = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> m.postRotate(90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> m.postRotate(180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> m.postRotate(270f)
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> m.preScale(-1f, 1f)
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> m.preScale(1f, -1f)
+            else -> return src
+        }
+        return Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
+    }
+
+    /** Siapkan file JPEG untuk upload: pilih file asli bila sudah JPEG (hindari recompress). */
     private fun prepareJpegForUpload(uri: Uri): File {
-        val mime = contentResolver.getType(uri)?.lowercase() ?: "image/jpeg"
-        return if (mime == "image/jpeg" || mime == "image/jpg") {
-            // Salin apa adanya ke file temp .jpg
+        return if (isJpeg(uri)) {
             val outFile = File.createTempFile("upload_", ".jpg", cacheDir)
             contentResolver.openInputStream(uri)?.use { input ->
                 outFile.outputStream().use { out -> input.copyTo(out) }
             } ?: throw IllegalStateException("Tidak bisa open stream: $uri")
             outFile
         } else {
-            // Decode + convert ke JPEG
-            val bmp = decodeBitmapScaled(uri, maxDim = 2048)
+            val bmp = decodeBitmapScaled(uri, maxDim = 4096) // jaga detail
             val outFile = File.createTempFile("upload_", ".jpg", cacheDir)
             FileOutputStream(outFile).use { fos ->
-                if (!bmp.compress(Bitmap.CompressFormat.JPEG, 92, fos)) {
+                if (!bmp.compress(Bitmap.CompressFormat.JPEG, 95, fos)) {
                     throw IllegalStateException("Gagal kompres JPEG")
                 }
             }
             outFile
         }
+    }
+
+    private fun isJpeg(uri: Uri): Boolean {
+        return try {
+            contentResolver.openInputStream(uri)?.use { ins ->
+                val b1 = ins.read(); val b2 = ins.read()
+                b1 == 0xFF && b2 == 0xD8 // marker SOI JPEG
+            } ?: false
+        } catch (_: Exception) { false }
     }
 
     // --- preprocess PyTorch (CHW) ---

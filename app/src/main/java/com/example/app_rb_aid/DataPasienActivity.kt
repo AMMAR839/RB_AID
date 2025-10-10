@@ -52,21 +52,19 @@ class DataPasienActivity : AppCompatActivity() {
         leftLabel  = intent.getStringExtra("LEFT_LABEL")
         leftScore  = intent.getFloatExtra("LEFT_SCORE", -1f)
 
-        // Mode offline seharusnya tidak lewat sini (CameraActivity langsung ke HasilActivity),
-        // tapi kalaupun lewat, tetap aman:
+        // Mode offline tidak lewat sini
         if (ModeManager.mode == ModeManager.Mode.OFFLINE) {
             goToHasilOffline()
             return
         }
 
-        // Minimal 1 mata harus ada untuk online flow
+        // Minimal 1 mata harus ada
         if (rightUri == null && leftUri == null) {
             Toast.makeText(this, "Minimal pilih/ambil 1 mata terlebih dahulu.", Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
-        // === ONLINE mode → render UI ===
         setContentView(R.layout.activity_data_pasien)
 
         etNama = findViewById(R.id.PasienNama)
@@ -75,29 +73,44 @@ class DataPasienActivity : AppCompatActivity() {
         tilTanggal = findViewById(R.id.tilPasienTanggal)
         btnSimpan = findViewById(R.id.button_simpan)
 
-        // === Picker Tanggal ===
+        // Picker Tanggal Lahir
         etTanggal.setOnClickListener { showTanggalPicker(etTanggal, tilTanggal) }
         tilTanggal.setEndIconOnClickListener { etTanggal.performClick() }
         etTanggal.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) etTanggal.performClick() }
 
-        // === Tombol Simpan ===
-        // di onCreate -> btnSimpan.setOnClickListener
+        // Simpan → langsung ke HasilActivity (upload dilakukan di HasilActivity)
         btnSimpan.setOnClickListener {
             val nama = etNama.text.toString().trim()
             val nik = etNik.text.toString().trim()
-            val tanggal = etTanggal.text.toString().trim()
+            val tanggal = etTanggal.text.toString().trim() // DOB
 
             if (nama.isEmpty() || nik.isEmpty() || tanggal.isEmpty()) {
                 Toast.makeText(this, "Lengkapi data pasien", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Langsung ke HasilActivity (tanpa nunggu upload)
+            // Timestamp pemeriksaan (sekarang)
+            val now = Date()
+            val fmtDate = SimpleDateFormat("dd/MM/yyyy", Locale("id","ID"))
+            val fmtTime = SimpleDateFormat("HH:mm 'WIB'", Locale("id","ID"))
+            val examDate = fmtDate.format(now)
+            val examTime = fmtTime.format(now)
+
             val intent = Intent(this, HasilActivity::class.java).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
                 putExtra("EXTRA_NAMA", nama)
                 putExtra("EXTRA_NIK", nik)
-                putExtra("EXTRA_TANGGAL", tanggal)
 
+                // DOB eksplisit + kompat lama
+                putExtra("EXTRA_TANGGAL", tanggal)
+                putExtra("EXTRA_TANGGAL_LAHIR", tanggal)
+
+                // Jadwal pemeriksaan
+                putExtra("EXTRA_TANGGAL_PEMERIKSAAN", examDate)
+                putExtra("EXTRA_WAKTU_PEMERIKSAAN",   examTime)
+
+                // Hasil model per-mata
                 putExtra("RIGHT_EYE_URI", rightUri)
                 putExtra("LEFT_EYE_URI", leftUri)
                 putExtra("RIGHT_LABEL", rightLabel)
@@ -105,24 +118,23 @@ class DataPasienActivity : AppCompatActivity() {
                 putExtra("LEFT_LABEL", leftLabel)
                 putExtra("LEFT_SCORE", leftScore)
 
-                // Beri tahu HasilActivity untuk melakukan upload & simpan
+                // Beri tahu HasilActivity untuk upload & simpan
                 putExtra("NEEDS_UPLOAD", true)
 
                 val uris = mutableListOf<Uri>()
                 rightUri?.let { uris.add(Uri.parse(it)) }
                 leftUri ?.let { uris.add(Uri.parse(it)) }
                 if (uris.isNotEmpty()) {
-                    clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
-                    for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                    clipData = ClipData.newUri(contentResolver, "eye", uris[0])
+                    for (i in 1 until uris.size) clipData!!.addItem(ClipData.Item(uris[i]))
                 }
             }
             startActivity(intent)
-            finish() // DataPasienActivity selesai, user langsung lihat hasil
+            finish()
         }
-
     }
 
-    // === Fungsi menampilkan date picker ===
+    // === Date picker ===
     private fun showTanggalPicker(target: TextInputEditText, til: TextInputLayout?) {
         val start1900 = Calendar.getInstance().apply {
             set(1900, Calendar.JANUARY, 1, 0, 0, 0)
@@ -161,7 +173,7 @@ class DataPasienActivity : AppCompatActivity() {
         }
     }
 
-    // === Simpan ke Firebase (online mode) ===
+    // (Tetap disimpan bila kamu masih butuh di tempat lain)
     private suspend fun saveToFirebase(nama: String, nik: String, tanggal: String) = withContext(Dispatchers.IO) {
         try {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
@@ -171,7 +183,6 @@ class DataPasienActivity : AppCompatActivity() {
             val pasienId = "${nama.replace(" ", "_")}_${System.currentTimeMillis()}"
             val baseRef = storage.child("rb_images/$uid/$pasienId")
 
-            // Upload hanya yang ada
             var rightUrl: String? = null
             var leftUrl: String? = null
 
@@ -190,7 +201,6 @@ class DataPasienActivity : AppCompatActivity() {
                     .toString()
             }
 
-            // Build dokumen hanya dengan field yang ada
             val doc = mutableMapOf<String, Any?>(
                 "nama" to nama,
                 "nik" to nik,
@@ -198,13 +208,11 @@ class DataPasienActivity : AppCompatActivity() {
                 "created_at" to System.currentTimeMillis()
             )
 
-            // Label & score yang tersedia
             rightLabel?.let { doc["hasil_kanan"] = it }
             if (rightScore >= 0f) doc["confidence_kanan"] = rightScore
             leftLabel?.let { doc["hasil_kiri"] = it }
             if (leftScore >= 0f) doc["confidence_kiri"] = leftScore
 
-            // URL yang tersedia
             rightUrl?.let { doc["foto_kanan_url"] = it }
             leftUrl?.let  { doc["foto_kiri_url"]  = it }
 
@@ -212,7 +220,6 @@ class DataPasienActivity : AppCompatActivity() {
                 .collection("pasien").document(pasienId)
                 .set(doc).await()
 
-            // Hitung diagnosis buat tampilan hasil
             val diagnosis = buildDiagnosis(rightLabel, leftLabel)
 
             withContext(Dispatchers.Main) {
@@ -224,7 +231,6 @@ class DataPasienActivity : AppCompatActivity() {
                 Toast.makeText(this@DataPasienActivity, "Gagal simpan: ${e.message}", Toast.LENGTH_LONG).show()
                 val diagnosis = buildDiagnosis(rightLabel, leftLabel)
                 goToHasilOnline(nama, nik, tanggal, null, null, diagnosis)
-
             }
         }
     }
@@ -237,10 +243,21 @@ class DataPasienActivity : AppCompatActivity() {
         leftUrl: String?,
         diagnosis: String
     ) {
+        val now = Date()
+        val fmtDate = SimpleDateFormat("dd/MM/yyyy", Locale("id","ID"))
+        val fmtTime = SimpleDateFormat("HH:mm 'WIB'", Locale("id","ID"))
+
         val intent = Intent(this, HasilActivity::class.java).apply {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
             putExtra("EXTRA_NAMA", nama)
             putExtra("EXTRA_NIK", nik)
+
             putExtra("EXTRA_TANGGAL", tanggal)
+            putExtra("EXTRA_TANGGAL_LAHIR", tanggal)
+
+            putExtra("EXTRA_TANGGAL_PEMERIKSAAN", fmtDate.format(now))
+            putExtra("EXTRA_WAKTU_PEMERIKSAAN",   fmtTime.format(now))
 
             putExtra("RIGHT_EYE_URI", rightUri)
             putExtra("LEFT_EYE_URI", leftUri)
@@ -253,14 +270,14 @@ class DataPasienActivity : AppCompatActivity() {
             putExtra("LEFT_URL", leftUrl)
 
             putExtra("DIAGNOSIS", diagnosis)
+
             val uris = mutableListOf<Uri>()
             rightUri?.let { uris.add(Uri.parse(it)) }
             leftUri ?.let { uris.add(Uri.parse(it)) }
             if (uris.isNotEmpty()) {
-                clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
-                for (i in 1 until uris.size) clipData!!.addItem(android.content.ClipData.Item(uris[i]))
+                clipData = ClipData.newUri(contentResolver, "eye", uris[0])
+                for (i in 1 until uris.size) clipData!!.addItem(ClipData.Item(uris[i]))
             }
-
         }
         startActivity(intent)
         finish()
@@ -268,10 +285,20 @@ class DataPasienActivity : AppCompatActivity() {
 
     private fun goToHasilOffline() {
         val diagnosis = buildDiagnosis(rightLabel, leftLabel)
+        val now = Date()
+        val fmtDate = SimpleDateFormat("dd/MM/yyyy", Locale("id","ID"))
+        val fmtTime = SimpleDateFormat("HH:mm 'WIB'", Locale("id","ID"))
+
         val intent = Intent(this, HasilActivity::class.java).apply {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
             putExtra("EXTRA_NAMA", "Mode Offline")
             putExtra("EXTRA_NIK", "")
             putExtra("EXTRA_TANGGAL", "")
+            putExtra("EXTRA_TANGGAL_LAHIR", "")
+
+            putExtra("EXTRA_TANGGAL_PEMERIKSAAN", fmtDate.format(now))
+            putExtra("EXTRA_WAKTU_PEMERIKSAAN",   fmtTime.format(now))
 
             putExtra("RIGHT_EYE_URI", rightUri)
             putExtra("LEFT_EYE_URI", leftUri)
@@ -281,15 +308,15 @@ class DataPasienActivity : AppCompatActivity() {
             putExtra("LEFT_SCORE", leftScore)
 
             putExtra("DIAGNOSIS", diagnosis)
+
             val uris = mutableListOf<Uri>()
             rightUri?.let { uris.add(Uri.parse(it)) }
             leftUri ?.let { uris.add(Uri.parse(it)) }
             if (uris.isNotEmpty()) {
                 clipData = ClipData.newUri(contentResolver, "eye", uris[0])
-                for (i in 1 until uris.size) {
-                    clipData!!.addItem(ClipData.Item(uris[i]))
-                }
-        }}
+                for (i in 1 until uris.size) clipData!!.addItem(ClipData.Item(uris[i]))
+            }
+        }
         startActivity(intent)
         finish()
     }

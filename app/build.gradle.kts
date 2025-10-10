@@ -81,6 +81,7 @@ dependencies {
     implementation("org.pytorch:pytorch_android:1.13.1")
     implementation("org.pytorch:pytorch_android_torchvision:1.13.1")
 
+    implementation("androidx.exifinterface:exifinterface:<latest>")
     // ---------- Coroutines & Lifecycle ----------
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)

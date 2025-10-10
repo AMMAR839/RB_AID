@@ -127,4 +127,42 @@
         android:background="#FFFFFFFF"
         android:alpha="0"
         android:visibility="gone" />
-</FrameLayout>
+
+    <!-- Overlay Loading untuk proses ML -->
+    <!-- Overlay Loading untuk proses ML -->
+    <View
+        android:id="@+id/loadingBlockerML"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/loadingOverlayML"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@android:color/transparent"
+        android:visibility="gone">
+
+    <ProgressBar
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:indeterminate="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Memproses gambar..."
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_marginTop="12dp"/>
+</LinearLayout>
+
+
+    </FrameLayout>

@@ -36,7 +36,6 @@ class HospitalListActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerView_hospital)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // cek permission dulu
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -67,7 +66,6 @@ class HospitalListActivity : AppCompatActivity() {
         val task = settingsClient.checkLocationSettings(builder.build())
 
         task.addOnSuccessListener {
-            // Lokasi sudah aktif → ambil lokasi
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
                     if (location != null) {
@@ -75,7 +73,6 @@ class HospitalListActivity : AppCompatActivity() {
                         userLng = location.longitude
                         loadHospitals()
                     } else {
-                        // kalau null, minta update lokasi baru
                         requestNewLocation(locationRequest)
                     }
                 }
@@ -84,9 +81,8 @@ class HospitalListActivity : AppCompatActivity() {
         task.addOnFailureListener { exception ->
             if (exception is ResolvableApiException) {
                 try {
-                    // munculin dialog ke user buat nyalain GPS
                     exception.startResolutionForResult(this, GPS_REQUEST_CODE)
-                } catch (sendEx: Exception) {
+                } catch (_: Exception) {
                     Toast.makeText(this, "Tidak bisa meminta lokasi", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -152,15 +148,11 @@ class HospitalListActivity : AppCompatActivity() {
         }
 
         val mapIntent = Intent(Intent.ACTION_VIEW, mapsUri)
-
-        // coba pakai Google Maps dulu
         mapIntent.setPackage("com.google.android.apps.maps")
 
-        // cek apakah ada aplikasi Maps
         if (mapIntent.resolveActivity(packageManager) != null) {
             startActivity(mapIntent)
         } else {
-            // fallback ke browser
             val browserIntent = Intent(Intent.ACTION_VIEW, mapsUri)
             startActivity(browserIntent)
         }
@@ -191,8 +183,11 @@ class HospitalListActivity : AppCompatActivity() {
             return
         }
 
-        // --- Template email ---
-        val subject = com.example.app_rb_aid.util.EmailTemplates.subject(patientName, if (examDate.isNotBlank()) examDate else "Hari ini")
+        val subject = com.example.app_rb_aid.util.EmailTemplates.subject(
+            patientName,
+            if (examDate.isNotBlank()) examDate else "Hari ini"
+        )
+
         val body = com.example.app_rb_aid.util.EmailTemplates.body(
             rsName = hospital.name ?: "Rumah Sakit",
             doctorOrTeam = "Dokter/Tim",
@@ -200,6 +195,10 @@ class HospitalListActivity : AppCompatActivity() {
             nik = nik, dob = dob, contact = contact, address = address,
             examDate = if (examDate.isNotBlank()) examDate else "Hari ini",
             examTime = examTime,
+            rightLabel = rightLabel,
+            rightScore = rightScore,
+            leftLabel  = leftLabel,
+            leftScore  = leftScore,
             diagnosis = diagnosis,
             senderName = "Petugas/Orang Tua",
             appOrOrg = "RB-Aid"
@@ -212,7 +211,7 @@ class HospitalListActivity : AppCompatActivity() {
 
         val emailIntent = if (attachments.size <= 1) {
             Intent(Intent.ACTION_SEND).apply {
-                type = "message/rfc822"              // biar difilter ke email client
+                type = "message/rfc822"
                 putExtra(Intent.EXTRA_EMAIL, arrayOf(hospital.email))
                 putExtra(Intent.EXTRA_SUBJECT, subject)
                 putExtra(Intent.EXTRA_TEXT, body)
@@ -233,8 +232,6 @@ class HospitalListActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(emailIntent, "Kirim Email"))
     }
 
-
-    // handle hasil request permission
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -253,14 +250,12 @@ class HospitalListActivity : AppCompatActivity() {
         }
     }
 
-    // handle hasil dari dialog GPS
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == GPS_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                // user sudah nyalain GPS → ulang ambil lokasi
                 getUserLocation()
             } else {
                 Toast.makeText(this, "Lokasi harus diaktifkan untuk menampilkan rumah sakit terdekat", Toast.LENGTH_LONG).show()

@@ -1,4 +1,3 @@
-// HasilActivity.kt
 package com.example.app_rb_aid
 
 import android.content.Intent
@@ -23,7 +22,7 @@ class HasilActivity : AppCompatActivity() {
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    // extras yang kita butuhkan untuk upload
+    // extras untuk upload & rujukan
     private var rightUriStr: String? = null
     private var leftUriStr: String? = null
     private var rightLabel: String? = null
@@ -40,11 +39,9 @@ class HasilActivity : AppCompatActivity() {
         if (srcStr.isNullOrBlank()) return null
         val src = Uri.parse(srcStr)
         return try {
-            // Jika sudah dari FileProvider app sendiri, biarkan
             if (src.scheme == "content" && src.authority == "${packageName}.fileprovider") {
                 return src.toString()
             }
-            // Salin konten ke cache lalu jadikan content:// fileprovider
             val out = java.io.File(cacheDir, "share_${System.currentTimeMillis()}.jpg")
             contentResolver.openInputStream(src)?.use { input ->
                 out.outputStream().use { output -> input.copyTo(output) }
@@ -66,7 +63,19 @@ class HasilActivity : AppCompatActivity() {
         // ---------- Ambil extras ----------
         val nama = intent.getStringExtra("EXTRA_NAMA") ?: "-"
         val nik = intent.getStringExtra("EXTRA_NIK") ?: "-"
-        val tanggal = intent.getStringExtra("EXTRA_TANGGAL") ?: "-"
+
+        // DOB (pakai EXTRA_TANGGAL_LAHIR; fallback ke EXTRA_TANGGAL)
+        val dob = intent.getStringExtra("EXTRA_TANGGAL_LAHIR")
+            ?: intent.getStringExtra("EXTRA_TANGGAL") ?: "-"
+
+        // Tanggal/Waktu pemeriksaan (fallback default: sekarang)
+        val defaultDate = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("id","ID"))
+            .format(java.util.Date())
+        val defaultTime = java.text.SimpleDateFormat("HH:mm 'WIB'", java.util.Locale("id","ID"))
+            .format(java.util.Date())
+
+        val examDate = intent.getStringExtra("EXTRA_TANGGAL_PEMERIKSAAN") ?: defaultDate
+        val examTime = intent.getStringExtra("EXTRA_WAKTU_PEMERIKSAAN") ?: defaultTime
 
         rightUriStr = intent.getStringExtra("RIGHT_EYE_URI")
         leftUriStr  = intent.getStringExtra("LEFT_EYE_URI")
@@ -79,7 +88,7 @@ class HasilActivity : AppCompatActivity() {
         rightUriStr = makeLocalShareableUri(rightUriStr)
         leftUriStr  = makeLocalShareableUri(leftUriStr)
 
-        // ---------- Header / ringkasan ----------
+        // ---------- Header ----------
         val ivStatus = findViewById<ImageView>(R.id.ivStatus)
         val tvTitle  = findViewById<TextView>(R.id.tvTitle)
         val tvName   = findViewById<TextView>(R.id.tvName)
@@ -112,22 +121,27 @@ class HasilActivity : AppCompatActivity() {
             val go = Intent(this, HospitalListActivity::class.java).apply {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-                // URI foto (biar bisa jadi lampiran)
+                // URI foto
                 putExtra("RIGHT_EYE_URI", rightUriStr)
                 putExtra("LEFT_EYE_URI",  leftUriStr)
 
-                // Hasil model online
+                // Hasil per-mata
+                putExtra("RIGHT_LABEL", rightLabel)
+                putExtra("RIGHT_SCORE", rightScore)
+                putExtra("LEFT_LABEL",  leftLabel)
+                putExtra("LEFT_SCORE",  leftScore)
 
-                // Data pasien & waktu (isi sesuai yang kamu punya)
+                // Ringkasan umum
+                putExtra("DIAGNOSIS",   buildDiagnosis(rightLabel, leftLabel))
+
+                // Data pasien & waktu (pakai yang dikirim dari DataPasienActivity)
                 putExtra("EXTRA_NAMA", nama)
                 putExtra("EXTRA_NIK",  nik)
-                putExtra("EXTRA_TANGGAL_LAHIR", "")   // isi kalau ada
-                putExtra("EXTRA_KONTAK", "")          // isi kalau ada
-                putExtra("EXTRA_ALAMAT", "")          // isi kalau ada
+                putExtra("EXTRA_TANGGAL_LAHIR", dob)
+                putExtra("EXTRA_TANGGAL_PEMERIKSAAN", examDate)
+                putExtra("EXTRA_WAKTU_PEMERIKSAAN",   examTime)
 
-                putExtra("EXTRA_TANGGAL_PEMERIKSAAN", tanggal) // atau tanggal sekarang
-                putExtra("EXTRA_WAKTU_PEMERIKSAAN",   "") // mis. "14:30 WIB"
-
+                // Lampirkan ClipData multi-URI
                 val uris = mutableListOf<Uri>()
                 rightUriStr?.let { uris.add(Uri.parse(it)) }
                 leftUriStr ?.let { uris.add(Uri.parse(it)) }
@@ -135,23 +149,23 @@ class HasilActivity : AppCompatActivity() {
                     clipData = android.content.ClipData.newUri(contentResolver, "eye", uris[0])
                     for (i in 1 until uris.size) {
                         clipData!!.addItem(android.content.ClipData.Item(uris[i]))
-                    } }
+                    }
+                }
             }
             startActivity(go)
         }
 
-
-        // ---------- Back ----------
+        // Back
         findViewById<ImageView>(R.id.back_button_data_pasien).setOnClickListener { finish() }
 
-        // ---------- Loading overlay ----------
+        // Loading overlay
         loadingOverlay = findViewById(R.id.loadingOverlay)
 
-        // Kalau datang dari DataPasienActivity untuk online flow → lakukan upload & simpan di sini
+        // Upload & simpan di sini jika diminta
         val needsUpload = intent.getBooleanExtra("NEEDS_UPLOAD", false)
         if (needsUpload && (rightUriStr != null || leftUriStr != null)) {
             showLoading(true)
-            scope.launch { saveToFirebaseHere(nama, nik, tanggal) }
+            scope.launch { saveToFirebaseHere(nama, nik, dob, examDate, examTime) }
         }
     }
 
@@ -159,7 +173,13 @@ class HasilActivity : AppCompatActivity() {
         loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
     }
 
-    private suspend fun saveToFirebaseHere(nama: String, nik: String, tanggal: String) = withContext(Dispatchers.IO) {
+    private suspend fun saveToFirebaseHere(
+        nama: String,
+        nik: String,
+        dob: String,
+        examDate: String,
+        examTime: String
+    ) = withContext(Dispatchers.IO) {
         try {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
             val storage = FirebaseStorage.getInstance().reference
@@ -183,7 +203,9 @@ class HasilActivity : AppCompatActivity() {
             val doc = mutableMapOf<String, Any?>(
                 "nama" to nama,
                 "nik" to nik,
-                "tanggal" to tanggal,
+                "tanggal_lahir" to dob,
+                "tanggal_periksa" to examDate,
+                "waktu_periksa" to examTime,
                 "created_at" to System.currentTimeMillis()
             )
             rightLabel?.let { doc["hasil_kanan"] = it }
